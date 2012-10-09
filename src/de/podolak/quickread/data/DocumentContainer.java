@@ -27,7 +27,9 @@ public class DocumentContainer extends BeanItemContainer<Document> implements Se
         if (instance == null) {
             try {
                 instance = new DocumentContainer();
-            } catch (InstantiationException | IllegalAccessException ex) {
+            } catch (InstantiationException ex) {
+                Logger.getLogger(DocumentContainer.class.getName()).log(Level.SEVERE, null, ex);
+            } catch (IllegalAccessException ex) {
                 Logger.getLogger(DocumentContainer.class.getName()).log(Level.SEVERE, null, ex);
             }
         }

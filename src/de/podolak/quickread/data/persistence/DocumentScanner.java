@@ -22,7 +22,7 @@ public class DocumentScanner {
      */
     public DocumentScanner(org.w3c.dom.Document document) {
         this.inputDocument = document;
-        this.nodeStack = new Stack<>();
+        this.nodeStack = new Stack<Node>();
     }
     
     public Document getDocument() {
