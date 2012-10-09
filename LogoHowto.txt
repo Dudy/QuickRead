@@ -1,0 +1,11 @@
+Quickread - HowTo do the Logo/Icon
+
+Font: "As seen on TV"
+Size: 60
+Edit: kleinen Q-Strich oben entfernen und unten nach rechts verschieben und nach oben links verlängern
+      - test_logo_6_a.xcf: oben entfernt, unten verschoben
+	  - test_logo_6_b.xcf: nach links oben bis ans Q verlängert
+	  - test_logo_6_c.xcf: rechts unten ausgeschnitten, um 180° gedreht und nach links oben kopiert
+	  - test_logo_6_d.xcf: ausgeschnittenes Stück an richtige Stelle gesetzt
+	  - test_logo_6_e.xcf: Querstück ausgeschnitten
+	  - 

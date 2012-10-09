@@ -1,0 +1,57 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<java version="1.7.0_04" class="java.beans.XMLDecoder">
+ <object class="de.podolak.quickread.data.try1.Document">
+  <void property="root">
+   <object class="de.podolak.quickread.data.try1.Node">
+    <void property="nodes">
+     <void method="add">
+      <object class="de.podolak.quickread.data.try1.Node">
+       <void property="title">
+        <string>child one</string>
+       </void>
+      </object>
+     </void>
+     <void method="add">
+      <object class="de.podolak.quickread.data.try1.Node">
+       <void property="nodes">
+        <void method="add">
+         <object class="de.podolak.quickread.data.try1.Node">
+          <void property="text">
+           <string>text</string>
+          </void>
+          <void property="title">
+           <string>leaf</string>
+          </void>
+         </object>
+        </void>
+        <void method="add">
+         <object class="de.podolak.quickread.data.try1.Node">
+          <void property="text">
+           <string>another text</string>
+          </void>
+          <void property="title">
+           <string>another leaf</string>
+          </void>
+         </object>
+        </void>
+       </void>
+       <void property="title">
+        <string>child two</string>
+       </void>
+      </object>
+     </void>
+     <void method="add">
+      <object class="de.podolak.quickread.data.try1.Node">
+       <void property="title">
+        <string>child three</string>
+       </void>
+      </object>
+     </void>
+    </void>
+    <void property="title">
+     <string>root node</string>
+    </void>
+   </object>
+  </void>
+ </object>
+</java>
