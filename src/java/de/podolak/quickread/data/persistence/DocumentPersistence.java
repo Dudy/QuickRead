@@ -6,6 +6,7 @@ import com.google.appengine.api.datastore.Entity;
 import com.google.appengine.api.datastore.EntityNotFoundException;
 import com.google.appengine.api.datastore.Key;
 import com.google.appengine.api.datastore.KeyFactory;
+import com.google.appengine.api.datastore.Query;
 import com.google.appengine.api.datastore.Text;
 import de.podolak.quickread.QuickReadApplication;
 import de.podolak.quickread.data.Document;
@@ -52,10 +53,6 @@ public class DocumentPersistence {
     }
     
     public static Document loadDocumentByTypeGAE(Long id) {
-//        Entity dd = new Entity("Document", 1L);
-//        dd.setProperty("content", new Text(DocumentJpaController.document.getContent()));
-//        DatastoreServiceFactory.getDatastoreService().put(dd);
-        
         Key key = KeyFactory.createKey("Document", id);
             
         try {
@@ -63,9 +60,12 @@ public class DocumentPersistence {
             return loadDocumentFromString(((Text)datastoreDocument.getProperty("content")).getValue());
         } catch (EntityNotFoundException ex) {
             Logger.getLogger(DocumentPersistence.class.getName()).log(Level.SEVERE, null, ex);
+            
+            Entity dd = new Entity("Document", id);
+            dd.setProperty("content", new Text(DocumentJpaController.document.getContent()));
+            DatastoreServiceFactory.getDatastoreService().put(dd);
+            return loadDocumentFromString(DocumentJpaController.document.getContent());
         }
-        
-        return null;
     }
     
     public static Document loadDocumentFromString(String content) {
