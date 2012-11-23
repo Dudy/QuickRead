@@ -1,0 +1,19 @@
+database:
+    GAE datastore Entity with three properties:
+        - content
+        - createDate
+        - lastModifyDate
+    demo code:
+        Entity entity = new Entity("Document", id);
+        entity.setProperty("content", "custom text");
+        entity.setProperty("createDate", new Date().getTime());
+        entity.setProperty("lastModifyDate", new Date().getTime());
+        DatastoreServiceFactory.getDatastoreService().put(entity);
+
+application:
+    POJO with four attributes:
+        - Long id
+        - Node root
+        - Date createDate
+        - Date lastModifyDate
+

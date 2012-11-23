@@ -21,11 +21,13 @@ public class Document implements Serializable {
     public Document() {
     }
 
-    public Document(Long id, Node root) {
+    public Document(Long id, Node root, Date createDate, Date lastModifyDate) {
         this.id = id;
         this.root = root;
+        this.createDate = createDate;
+        this.lastModifyDate = lastModifyDate;
     }
-    
+
     public Long getId() {
         return id;
     }

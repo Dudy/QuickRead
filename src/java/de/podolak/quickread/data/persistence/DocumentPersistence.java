@@ -6,7 +6,6 @@ import com.google.appengine.api.datastore.Entity;
 import com.google.appengine.api.datastore.EntityNotFoundException;
 import com.google.appengine.api.datastore.Key;
 import com.google.appengine.api.datastore.KeyFactory;
-import com.google.appengine.api.datastore.Query;
 import com.google.appengine.api.datastore.Text;
 import de.podolak.quickread.QuickReadApplication;
 import de.podolak.quickread.data.Document;
@@ -57,12 +56,17 @@ public class DocumentPersistence {
             
         try {
             Entity datastoreDocument = DatastoreServiceFactory.getDatastoreService().get(key);
-            return loadDocumentFromString(((Text)datastoreDocument.getProperty("content")).getValue());
+            Document document = loadDocumentFromString(((Text)datastoreDocument.getProperty("content")).getValue());
+            document.setCreateDate(new Date((Long)datastoreDocument.getProperty("createDate")));
+            document.setLastModifyDate(new Date((Long)datastoreDocument.getProperty("lastModifyDate")));
+            return document;
         } catch (EntityNotFoundException ex) {
             Logger.getLogger(DocumentPersistence.class.getName()).log(Level.SEVERE, null, ex);
             
             Entity dd = new Entity("Document", id);
             dd.setProperty("content", new Text(DocumentJpaController.document.getContent()));
+            dd.setProperty("createDate", new Date().getTime());
+            dd.setProperty("lastModifyDate", new Date().getTime());
             DatastoreServiceFactory.getDatastoreService().put(dd);
             return loadDocumentFromString(DocumentJpaController.document.getContent());
         }
@@ -134,16 +138,19 @@ public class DocumentPersistence {
             
             try {
                 datastoreDocument = datastore.get(key);
+                datastoreDocument.setProperty("createDate", document.getCreateDate().getTime());
             } catch (EntityNotFoundException ex) {
                 Logger.getLogger(DocumentPersistence.class.getName()).log(Level.SEVERE, null, ex);
             }
         } else {
             datastoreDocument = new Entity("Document");
             document.setId(datastoreDocument.getKey().getId());
+            datastoreDocument.setProperty("createDate", new Date().getTime());
         }
         
         if (datastoreDocument != null) {
             datastoreDocument.setProperty("content", new Text(SimpleDocumentWriter.write(document).getContent()));
+            datastoreDocument.setProperty("lastModifyDate", new Date().getTime());
             datastore.put(datastoreDocument);
         }
         

@@ -33,6 +33,7 @@ import de.podolak.quickread.ui.NodeForm;
 import de.podolak.quickread.ui.NodeView;
 import java.util.Arrays;
 import java.util.Collection;
+import java.util.Date;
 import java.util.List;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -60,6 +61,7 @@ public class QuickReadApplication extends Application implements
     private HierarchicalContainer dataContainer;
     private Window window;
     private Long documentId = null;
+    private Date createDate;
     private String persistenceUnitName;
 
     @Override
@@ -301,6 +303,8 @@ public class QuickReadApplication extends Application implements
 
     // <editor-fold defaultstate="collapsed" desc=" data container handling ">
     private void createDataContainer(Document document) {
+        createDate = document.getCreateDate();
+        
         // create new container
         dataContainer.removeAllItems();
         dataContainer.addContainerProperty("title", String.class, Utilities.getI18NText("data.newNode.title"));
@@ -337,7 +341,10 @@ public class QuickReadApplication extends Application implements
     }
 
     private Document getDocument() {
-        return new Document(documentId, getNode(ROOT_INDEX));
+        //TODO: WTF? Ich erzeuge ein neues Document jedes Mal? Wasn Quatsch!
+        // Mach das weg! Oder doch net? Shit! Persistenz neu überdenken!!! DB Modell erstellen! Dann machen!
+        
+        return new Document(documentId, getNode(ROOT_INDEX), createDate, new Date());
     }
 
     private Node getNode(int itemId) {
