@@ -28,6 +28,11 @@
     text-shadow: #fafafa 1px 1px 0;
 }
 
+.authenticationLabel {
+    font-size: 12px;
+    text-shadow: #fafafa 1px 1px 0;
+}
+
 .toolbar .v-button .v-button-wrap, 
 .toolbar .v-disabled.v-button .v-button-wrap {
     background: transparent;
