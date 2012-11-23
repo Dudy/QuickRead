@@ -15,13 +15,10 @@ import com.vaadin.service.ApplicationContext;
 import com.vaadin.service.ApplicationContext.TransactionListener;
 import com.vaadin.terminal.Sizeable;
 import com.vaadin.terminal.ThemeResource;
-import com.vaadin.ui.Alignment;
 import com.vaadin.ui.Button;
 import com.vaadin.ui.Button.ClickEvent;
 import com.vaadin.ui.Button.ClickListener;
 import com.vaadin.ui.Component;
-import com.vaadin.ui.Embedded;
-import com.vaadin.ui.HorizontalLayout;
 import com.vaadin.ui.HorizontalSplitPanel;
 import com.vaadin.ui.VerticalLayout;
 import com.vaadin.ui.Window;
@@ -29,11 +26,11 @@ import com.vaadin.ui.Window.Notification;
 import de.podolak.quickread.data.Document;
 import de.podolak.quickread.data.Node;
 import de.podolak.quickread.data.persistence.DocumentPersistence;
-import de.podolak.quickread.ui.AuthenticationInfo;
 import de.podolak.quickread.ui.HelpWindow;
 import de.podolak.quickread.ui.NavigationTree;
 import de.podolak.quickread.ui.NodeForm;
 import de.podolak.quickread.ui.NodeView;
+import de.podolak.quickread.ui.Toolbar;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.Date;
@@ -46,7 +43,7 @@ import org.vaadin.dialogs.ConfirmDialog;
 
 @SuppressWarnings("serial")
 public class QuickReadApplication extends Application implements
-        ClickListener, ValueChangeListener, ItemClickListener,
+        ValueChangeListener, ItemClickListener,
         Container.ItemSetChangeListener, Container.PropertySetChangeListener {
 
     private static final int ROOT_INDEX = 0;
@@ -56,12 +53,8 @@ public class QuickReadApplication extends Application implements
     
     // ui
     private NavigationTree navigationTree;
-    private Button addNode = new Button(Utilities.getI18NText("action.addNode.button.caption"));
-    private Button removeNode = new Button(Utilities.getI18NText("action.removeNode.button.caption"));
-    private Button search = new Button(Utilities.getI18NText("action.search.button.caption"));
-    private Button help = new Button(Utilities.getI18NText("action.help.button.caption"));
+    private Toolbar toolbar;
     private HorizontalSplitPanel horizontalSplit = new HorizontalSplitPanel();
-    private AuthenticationInfo authenticationInfo;
     
     // Lazyly created ui references
     private NodeView nodeView = null;
@@ -89,7 +82,7 @@ public class QuickReadApplication extends Application implements
 						isInitialized = true;
 					}
 
-                    authenticationInfo.update((HttpServletRequest) req);
+                    toolbar.update((HttpServletRequest) req);
 				}
 
 				@Override
@@ -107,7 +100,6 @@ public class QuickReadApplication extends Application implements
 
     // <editor-fold defaultstate="collapsed" desc=" UI ">
     private void buildUI() {
-        navigationTree = new NavigationTree(this);
         buildMainLayout();
         setMainComponent(getNodeView());
     }
@@ -121,70 +113,21 @@ public class QuickReadApplication extends Application implements
         VerticalLayout layout = new VerticalLayout();
         layout.setSizeFull();
 
-        layout.addComponent(createToolbar());
+        layout.addComponent(toolbar = new Toolbar(this));
         layout.addComponent(horizontalSplit);
         layout.setExpandRatio(horizontalSplit, 1);
 
         horizontalSplit.setSplitPosition(400, Sizeable.UNITS_PIXELS);
-        horizontalSplit.setFirstComponent(navigationTree);
+        horizontalSplit.setFirstComponent(navigationTree = new NavigationTree(this));
 
         getMainWindow().setContent(layout);
-    }
-
-    private HorizontalLayout createToolbar() {
-        HorizontalLayout lo = new HorizontalLayout();
-        lo.addComponent(addNode);
-        lo.addComponent(removeNode);
-
-        lo.addComponent(search);
-        lo.addComponent(help);
-
-        addNode.addListener((ClickListener) this);
-        removeNode.addListener((ClickListener) this);
-
-        search.addListener((ClickListener) this);
-        help.addListener((ClickListener) this);
-
-        addNode.setIcon(new ThemeResource("icons/32x32/actions/edit_add.png"));
-        removeNode.setIcon(new ThemeResource("icons/32x32/actions/editdelete.png"));
-
-        addNode.addStyleName("multiline");
-        removeNode.addStyleName("multiline");
-
-        search.setIcon(new ThemeResource("icons/32x32/actions/find.png"));
-        help.setIcon(new ThemeResource("icons/32x32/actions/contents.png"));
-
-        lo.setMargin(true);
-        lo.setSpacing(true);
-
-        lo.setStyleName("toolbar");
-
-        lo.setWidth("100%");
-        
-        VerticalLayout vl = new VerticalLayout();
-
-        // user handling
-        authenticationInfo = new AuthenticationInfo(this);
-        vl.addComponent(authenticationInfo);
-        vl.setComponentAlignment(authenticationInfo, Alignment.TOP_RIGHT);
-        
-        // Quickread image
-        Embedded em = new Embedded("", new ThemeResource("images/Quickread06_height64.png"));
-        vl.addComponent(em);
-        vl.setComponentAlignment(em, Alignment.MIDDLE_RIGHT);
-        
-        lo.addComponent(vl);
-        lo.setComponentAlignment(vl, Alignment.TOP_RIGHT);
-        lo.setExpandRatio(vl, 1);
-
-        return lo;
     }
 
     private void setMainComponent(Component c) {
         horizontalSplit.setSecondComponent(c);
     }
 
-    private HelpWindow getHelpWindow() {
+    public HelpWindow getHelpWindow() {
         if (helpWindow == null) {
             helpWindow = new HelpWindow();
         }
@@ -199,24 +142,11 @@ public class QuickReadApplication extends Application implements
         return nodeView;
     }
 
-    private void showHelpWindow() {
+    public void showHelpWindow() {
         getMainWindow().addWindow(getHelpWindow());
     }
 
     // <editor-fold defaultstate="collapsed" desc=" event handlers ">
-    @Override
-    public void buttonClick(ClickEvent event) {
-        final Button source = event.getButton();
-
-        if (source == help) {
-            showHelpWindow();
-        } else if (source == addNode) {
-            addNode();
-        } else if (source == removeNode) {
-            removeNode();
-        }
-    }
-
     @Override
     public void valueChange(ValueChangeEvent event) {
         Property property = event.getProperty();
@@ -286,7 +216,7 @@ public class QuickReadApplication extends Application implements
         return dataContainer;
     }
 
-    private void addNode() {
+    public void addNode() {
         Object selectedItemIdObject = navigationTree.getValue();
 
         if (selectedItemIdObject != null) {
@@ -310,7 +240,7 @@ public class QuickReadApplication extends Application implements
         }
     }
 
-    private void removeNode() {
+    public void removeNode() {
         final Object selectedItemIdObject = navigationTree.getValue();
 
         if (selectedItemIdObject != null) {
