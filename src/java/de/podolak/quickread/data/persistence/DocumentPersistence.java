@@ -7,16 +7,12 @@ import com.google.appengine.api.datastore.EntityNotFoundException;
 import com.google.appengine.api.datastore.Key;
 import com.google.appengine.api.datastore.KeyFactory;
 import com.google.appengine.api.datastore.Text;
-import de.podolak.quickread.QuickReadApplication;
 import de.podolak.quickread.data.Document;
-import de.podolak.quickread.data.persistence.ejb.DocumentJpaController;
-import de.podolak.quickread.data.persistence.ejb.exceptions.RollbackFailureException;
+import de.podolak.quickread.data.Node;
 import java.io.StringReader;
 import java.util.Date;
 import java.util.logging.Level;
 import java.util.logging.Logger;
-import javax.persistence.EntityManagerFactory;
-import javax.persistence.Persistence;
 import javax.xml.parsers.DocumentBuilder;
 import javax.xml.parsers.DocumentBuilderFactory;
 import org.xml.sax.InputSource;
@@ -27,31 +23,7 @@ import org.xml.sax.InputSource;
  */
 public class DocumentPersistence {
     
-    private static DocumentPersistenceType DEFAULT_PERSISTENCE_TYPE = DocumentPersistenceType.GAE;
-    private static QuickReadApplication app;
-
     public static Document loadDocument(Long id) {
-        return loadDocumentByType(id, DEFAULT_PERSISTENCE_TYPE);
-    }
-    
-    public static Document loadDocumentByType(Long id, DocumentPersistenceType persistenceType) {
-        switch (persistenceType) {
-            case JPA:
-                return loadDocumentByTypeJPA(id);
-            case GAE:
-                return loadDocumentByTypeGAE(id);
-            default:
-                throw new AssertionError();
-        }
-    }
-    
-    public static Document loadDocumentByTypeJPA(Long id) {
-        EntityManagerFactory emf = Persistence.createEntityManagerFactory(app.getPersistenceUnitName());
-        DocumentJpaController controller = new DocumentJpaController(emf);
-        return loadDocumentFromString(controller.findDocumentEntity(id).getContent());
-    }
-    
-    public static Document loadDocumentByTypeGAE(Long id) {
         Key key = KeyFactory.createKey("Document", id);
             
         try {
@@ -61,14 +33,12 @@ public class DocumentPersistence {
             document.setLastModifyDate(new Date((Long)datastoreDocument.getProperty("lastModifyDate")));
             return document;
         } catch (EntityNotFoundException ex) {
-            Logger.getLogger(DocumentPersistence.class.getName()).log(Level.SEVERE, null, ex);
+            Logger.getLogger(DocumentPersistence.class.getName()).log(Level.INFO, "no Document with id {0} found, creating a new one", id);
             
-            Entity dd = new Entity("Document", id);
-            dd.setProperty("content", new Text(DocumentJpaController.document.getContent()));
-            dd.setProperty("createDate", new Date().getTime());
-            dd.setProperty("lastModifyDate", new Date().getTime());
-            DatastoreServiceFactory.getDatastoreService().put(dd);
-            return loadDocumentFromString(DocumentJpaController.document.getContent());
+            // create new Document, store immediately and hope the id is still not used ;-)
+            Document document = new Document(id, new Node("no title"), new Date(), new Date());
+            storeDocument(document);
+            return document;
         }
     }
     
@@ -76,9 +46,7 @@ public class DocumentPersistence {
         try {
             DocumentBuilderFactory builderFactory = DocumentBuilderFactory.newInstance();
             DocumentBuilder builder = builderFactory.newDocumentBuilder();
-            DocumentScanner scanner = new DocumentScanner(builder.parse(new InputSource(new StringReader(content))));
-            scanner.visitDocument();
-            return scanner.getDocument();
+            return DocumentHandler.deserializeDocument(builder.parse(new InputSource(new StringReader(content))));
         } catch (javax.xml.parsers.ParserConfigurationException e) {
             Logger.getLogger(DocumentPersistence.class.getName()).log(Level.SEVERE, "Fehler: kann keinen Parser erzeugen", e);
         } catch (org.xml.sax.SAXException e) {
@@ -91,47 +59,10 @@ public class DocumentPersistence {
     }
     
     public static Document storeDocument(Document document) {
-        return storeDocumentByType(document, DEFAULT_PERSISTENCE_TYPE);
-    }
-    
-    public static Document storeDocumentByType(Document document, DocumentPersistenceType persistenceType) {
-        switch (persistenceType) {
-            case JPA:
-                return storeDocumentByTypeJPA(document);
-            case GAE:
-                return storeDocumentByTypeGAE(document);
-            default:
-                throw new AssertionError();
-        }
-    }
-    
-    public static Document storeDocumentByTypeJPA(Document document) {
-        de.podolak.quickread.data.persistence.ejb.Document documentToStore = SimpleDocumentWriter.write(document);
-        EntityManagerFactory emf = Persistence.createEntityManagerFactory(app.getPersistenceUnitName());
-        DocumentJpaController controller = new DocumentJpaController(emf);
-        
-        try {
-            if (documentToStore.getId() == null) {
-                controller.create(documentToStore);
-                document.setId(documentToStore.getId());
-            } else {
-                controller.edit(documentToStore);
-            }
-            return document;
-        } catch (RollbackFailureException ex) {
-            Logger.getLogger(DocumentPersistence.class.getName()).log(Level.SEVERE, null, ex);
-        } catch (Exception ex) {
-            Logger.getLogger(DocumentPersistence.class.getName()).log(Level.SEVERE, null, ex);
-        }
-        
-        return null;
-    }
-    
-    private static Document storeDocumentByTypeGAE(Document document) {
         DatastoreService datastore = DatastoreServiceFactory.getDatastoreService();
 
         Long id = document.getId();
-        Entity datastoreDocument = null;
+        Entity datastoreDocument;
         
         if (id != null) {
             Key key = KeyFactory.createKey("Document", id);
@@ -140,7 +71,8 @@ public class DocumentPersistence {
                 datastoreDocument = datastore.get(key);
                 datastoreDocument.setProperty("createDate", document.getCreateDate().getTime());
             } catch (EntityNotFoundException ex) {
-                Logger.getLogger(DocumentPersistence.class.getName()).log(Level.SEVERE, null, ex);
+                datastoreDocument = new Entity("Document", id);
+                datastoreDocument.setProperty("createDate", new Date().getTime());
             }
         } else {
             datastoreDocument = new Entity("Document");
@@ -148,17 +80,11 @@ public class DocumentPersistence {
             datastoreDocument.setProperty("createDate", new Date().getTime());
         }
         
-        if (datastoreDocument != null) {
-            datastoreDocument.setProperty("content", new Text(SimpleDocumentWriter.write(document).getContent()));
-            datastoreDocument.setProperty("lastModifyDate", new Date().getTime());
-            datastore.put(datastoreDocument);
-        }
+        datastoreDocument.setProperty("content", new Text(DocumentHandler.serialize(document)));
+        datastoreDocument.setProperty("lastModifyDate", new Date().getTime());
+        datastore.put(datastoreDocument);
         
         return document;
     }
 
-    public static void registerApp(QuickReadApplication app) {
-        DocumentPersistence.app = app;
-    }
-    
 }

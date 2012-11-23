@@ -9,47 +9,23 @@ import java.util.Stack;
  *
  * @author Dude
  */
-public class DocumentScanner {
-    /**
-     * org.w3c.dom.Document inputDocument
-     */
-    org.w3c.dom.Document inputDocument;
+public class DocumentHandler {
     
-    private Document document;
-    private Stack<Node> nodeStack;
+    // <editor-fold defaultstate="collapsed" desc=" deserialization ">
+    private static Document document;
+    private static Stack<Node> nodeStack;
 
-    /**
-     * Create new Book1Scanner with org.w3c.dom.Document.
-     */
-    public DocumentScanner(org.w3c.dom.Document document) {
-        this.inputDocument = document;
-        this.nodeStack = new Stack<Node>();
-    }
-    
-    public Document getDocument() {
+    public static Document deserializeDocument(org.w3c.dom.Document inputDocument) {
+        DocumentHandler.nodeStack = new Stack<Node>();
+        org.w3c.dom.Element element = inputDocument.getDocumentElement();
+        visitElement_document(element);
         return document;
     }
     
     /**
-     * Scan through org.w3c.dom.Document inputDocument.
-     */
-    public void visitDocument() {
-        org.w3c.dom.Element element = inputDocument.getDocumentElement();
-        if ((element != null) && element.getTagName().equals("document")) {
-            visitElement_document(element);
-        }
-        if ((element != null) && element.getTagName().equals("node")) {
-            visitElement_node(element);
-        }
-        if ((element != null) && element.getTagName().equals("text")) {
-            visitElement_text(element);
-        }
-    }
-
-    /**
      * Scan through org.w3c.dom.Element named document.
      */
-    void visitElement_document(org.w3c.dom.Element element) {
+    private static void visitElement_document(org.w3c.dom.Element element) {
         document = new Document();
         
         // <document>
@@ -95,7 +71,7 @@ public class DocumentScanner {
     /**
      * Scan through org.w3c.dom.Element named node.
      */
-    void visitElement_node(org.w3c.dom.Element element) {
+    private static void visitElement_node(org.w3c.dom.Element element) {
         Node n = new Node();
         
         if (document.getRoot() == null) {
@@ -146,7 +122,7 @@ public class DocumentScanner {
     /**
      * Scan through org.w3c.dom.Element named text.
      */
-    void visitElement_text(org.w3c.dom.Element element) {
+    private static void visitElement_text(org.w3c.dom.Element element) {
         // <text>
         // element.getValue();
         org.w3c.dom.NodeList nodes = element.getChildNodes();
@@ -172,5 +148,58 @@ public class DocumentScanner {
             }
         }
     }
+    // </editor-fold>
+
+    // <editor-fold defaultstate="collapsed" desc=" serialization ">
+    public static String serialize(Document document) {
+        StringBuilder sb = new StringBuilder("<?xml version=\"1.0\" encoding=\"UTF-8\"?>");
+        
+        appendDocument(sb, document);
+        
+        return sb.toString();
+    }
+    
+    private static void appendDocument(StringBuilder stringBuilder, de.podolak.quickread.data.Document document) {
+        stringBuilder
+                .append("<document")
+                
+                .append(" id=\"").append(getFormattedId(document.getId())).append("\"")
+                .append(" createDate=\"").append(document.getCreateDate().getTime()).append("\"")
+                .append(" lastModifyDate=\"").append(document.getLastModifyDate().getTime()).append("\"")
+                
+                .append(">");
+        
+        appendNode(stringBuilder, document.getRoot());
+        stringBuilder.append("</document>");
+    }
+    
+    private static void appendNode(StringBuilder stringBuilder, Node node) {
+        // add opening tag
+        stringBuilder.append("<node title=\"");
+        if (node.getTitle() != null) {
+            stringBuilder.append(node.getTitle());
+        }
+        stringBuilder.append("\">");
+        
+        // add text if present
+        if (node.getText() != null && !node.getText().trim().isEmpty()) {
+            stringBuilder.append("<text>");
+            stringBuilder.append(node.getText());
+            stringBuilder.append("</text>");
+        }
+        
+        // add child nodes if present
+        for (Node child : node.getChildren()) {
+            appendNode(stringBuilder, child);
+        }
+        
+        // add closing tag
+        stringBuilder.append("</node>");
+    }
+    
+    private static String getFormattedId(Long id) {
+        return id == null ? "" : id.toString();
+    }
+    // </editor-fold>
     
 }

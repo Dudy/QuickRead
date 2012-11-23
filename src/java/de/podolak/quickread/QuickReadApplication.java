@@ -45,7 +45,8 @@ public class QuickReadApplication extends Application implements
         Container.ItemSetChangeListener, Container.PropertySetChangeListener {
 
     private static final int ROOT_INDEX = 0;
-    
+
+    private Window window;
     private NavigationTree navigationTree;
     private Button addNode = new Button(Utilities.getI18NText("action.addNode.button.caption"));
     private Button removeNode = new Button(Utilities.getI18NText("action.removeNode.button.caption"));
@@ -58,23 +59,15 @@ public class QuickReadApplication extends Application implements
     private HelpWindow helpWindow = null;
     private NodeForm nodeForm = null;
 
+    // data handling
     private HierarchicalContainer dataContainer;
-    private Window window;
     private Long documentId = null;
     private Date createDate;
-    private String persistenceUnitName;
 
     @Override
     public void init() {
-        if ("development".equals(System.getenv("GoogleAppEngineEnvironment"))) {
-            persistenceUnitName = "QuickRead_PU";
-        } else {
-            //TODO: siehe info
-        }
-        
         documentId = 1L; // vorerst mal nur auf dem einen Datensatz operieren
         dataContainer = new HierarchicalContainer();
-        DocumentPersistence.registerApp(this);
         createDataContainer(DocumentPersistence.loadDocument(documentId));
         navigationTree = new NavigationTree(this);
 
@@ -363,12 +356,5 @@ public class QuickReadApplication extends Application implements
         return node;
     }
     // </editor-fold>
-
-    public String getPersistenceUnitName() {
-        return persistenceUnitName;
-    }
-
-    public void setPersistenceUnitName(String persistenceUnitName) {
-        this.persistenceUnitName = persistenceUnitName;
-    }
+    
 }
