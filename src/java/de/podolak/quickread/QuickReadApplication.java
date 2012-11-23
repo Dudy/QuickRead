@@ -61,20 +61,19 @@ public class QuickReadApplication extends Application implements
 
     // data handling
     private HierarchicalContainer dataContainer;
-    private Long documentId = null;
-    private Date createDate;
+    private Document document;
 
     @Override
     public void init() {
-        documentId = 1L; // vorerst mal nur auf dem einen Datensatz operieren
         dataContainer = new HierarchicalContainer();
-        createDataContainer(DocumentPersistence.loadDocument(documentId));
+        createDataContainer(DocumentPersistence.getLastDocument());
+        
         navigationTree = new NavigationTree(this);
-
         buildMainLayout();
         setMainComponent(getNodeView());
     }
 
+    // <editor-fold defaultstate="collapsed" desc=" UI ">
     private void buildMainLayout() {
         window = new Window(Utilities.getI18NText("window.title"));
         System.out.println(window);
@@ -155,7 +154,81 @@ public class QuickReadApplication extends Application implements
     private void showHelpWindow() {
         getMainWindow().addWindow(getHelpWindow());
     }
+    
+    // <editor-fold defaultstate="collapsed" desc=" event handlers ">
+    @Override
+    public void buttonClick(ClickEvent event) {
+        final Button source = event.getButton();
 
+        if (source == help) {
+            showHelpWindow();
+        } else if (source == addNode) {
+            addNode();
+        } else if (source == removeNode) {
+            removeNode();
+        }
+    }
+    
+    @Override
+    public void valueChange(ValueChangeEvent event) {
+        Property property = event.getProperty();
+
+        if (property == navigationTree) {
+            Item selectedItem = navigationTree.getSelectedItem();
+            if (selectedItem != nodeForm.getItemDataSource()) {
+                nodeForm.setItemDataSource(selectedItem);
+            }
+        }
+    }
+
+    @Override
+    public void itemClick(ItemClickEvent event) {
+        if (event.getSource() == navigationTree) {
+            Object itemId = event.getItemId();
+
+            if (itemId != null) {
+                // System.out.println("1: " + event);
+            }
+        }
+    }
+    
+    @Override
+    public void containerItemSetChange(ItemSetChangeEvent event) {
+        System.out.println("2: " + event);
+        System.out.println(dataContainer.size());
+    }
+
+    @Override
+    public void containerPropertySetChange(PropertySetChangeEvent event) {
+        System.out.println("4: " + event);
+    }
+    // </editor-fold>
+    
+    // </editor-fold>
+    
+    // <editor-fold defaultstate="collapsed" desc=" data ">
+    public void save() {
+        Document newDocument = DocumentPersistence.storeDocument(new Document(
+                document.getId(),
+                getNode(ROOT_INDEX),
+                document.getCreateDate(),
+                new Date()));
+
+        if (newDocument == null) {
+            window.showNotification(
+                    Utilities.getI18NText("action.save.error.caption"),
+                    Utilities.getI18NText("action.save.error.description"),
+                    Notification.TYPE_WARNING_MESSAGE);
+        } else {
+            window.showNotification(
+                    Utilities.getI18NText("action.save.success.caption"),
+                    Utilities.getI18NText("action.save.success.description"));
+            createDataContainer(newDocument);
+            navigationTree.requestRepaint();
+        }
+    }
+
+    // <editor-fold defaultstate="collapsed" desc=" data container handling ">
     public Container getDataContainer() {
         return dataContainer;
     }
@@ -228,75 +301,8 @@ public class QuickReadApplication extends Application implements
         }
     }
 
-    public void save() {
-        Document document = DocumentPersistence.storeDocument(getDocument());
-
-        if (document == null) {
-            window.showNotification(
-                    Utilities.getI18NText("action.save.error.caption"),
-                    Utilities.getI18NText("action.save.error.description"),
-                    Notification.TYPE_WARNING_MESSAGE);
-        } else {
-            window.showNotification(
-                    Utilities.getI18NText("action.save.success.caption"),
-                    Utilities.getI18NText("action.save.success.description"));
-            createDataContainer(document);
-            navigationTree.requestRepaint();
-        }
-    }
-
-    // <editor-fold defaultstate="collapsed" desc=" event handlers ">
-    @Override
-    public void buttonClick(ClickEvent event) {
-        final Button source = event.getButton();
-
-        if (source == help) {
-            showHelpWindow();
-        } else if (source == addNode) {
-            addNode();
-        } else if (source == removeNode) {
-            removeNode();
-        }
-    }
-    
-    @Override
-    public void valueChange(ValueChangeEvent event) {
-        Property property = event.getProperty();
-
-        if (property == navigationTree) {
-            Item selectedItem = navigationTree.getSelectedItem();
-            if (selectedItem != nodeForm.getItemDataSource()) {
-                nodeForm.setItemDataSource(selectedItem);
-            }
-        }
-    }
-
-    @Override
-    public void itemClick(ItemClickEvent event) {
-        if (event.getSource() == navigationTree) {
-            Object itemId = event.getItemId();
-
-            if (itemId != null) {
-                // System.out.println("1: " + event);
-            }
-        }
-    }
-    
-    @Override
-    public void containerItemSetChange(ItemSetChangeEvent event) {
-        System.out.println("2: " + event);
-        System.out.println(dataContainer.size());
-    }
-
-    @Override
-    public void containerPropertySetChange(PropertySetChangeEvent event) {
-        System.out.println("4: " + event);
-    }
-    // </editor-fold>
-
-    // <editor-fold defaultstate="collapsed" desc=" data container handling ">
     private void createDataContainer(Document document) {
-        createDate = document.getCreateDate();
+        this.document = document;
         
         // create new container
         dataContainer.removeAllItems();
@@ -333,13 +339,6 @@ public class QuickReadApplication extends Application implements
         return newId;
     }
 
-    private Document getDocument() {
-        //TODO: WTF? Ich erzeuge ein neues Document jedes Mal? Wasn Quatsch!
-        // Mach das weg! Oder doch net? Shit! Persistenz neu überdenken!!! DB Modell erstellen! Dann machen!
-        
-        return new Document(documentId, getNode(ROOT_INDEX), createDate, new Date());
-    }
-
     private Node getNode(int itemId) {
         Item item = dataContainer.getItem(itemId);
         Node node = new Node(
@@ -355,6 +354,8 @@ public class QuickReadApplication extends Application implements
 
         return node;
     }
+    // </editor-fold>
+    
     // </editor-fold>
     
 }

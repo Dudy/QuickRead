@@ -23,6 +23,11 @@ import org.xml.sax.InputSource;
  */
 public class DocumentPersistence {
     
+    //TODO: use the current user here, return empty document when no user is logged on
+    public static Document getLastDocument() {
+        return loadDocument(1L);
+    }
+    
     public static Document loadDocument(Long id) {
         Key key = KeyFactory.createKey("Document", id);
             
