@@ -4,11 +4,12 @@ database:
         - createDate
         - lastModifyDate
     demo code:
-        Entity entity = new Entity("Document", id);
-        entity.setProperty("content", "custom text");
-        entity.setProperty("createDate", new Date().getTime());
-        entity.setProperty("lastModifyDate", new Date().getTime());
-        DatastoreServiceFactory.getDatastoreService().put(entity);
+        Entity document = new Entity("Document", id);
+        document.setProperty("content", "custom text");
+        document.setProperty("createDate", new Date().getTime());
+        document.setProperty("lastModifyDate", new Date().getTime());
+        document.setProperty("documentType", DocumentType.COMMON);
+        DatastoreServiceFactory.getDatastoreService().put(document);
 
 application:
     POJO with four attributes:
@@ -17,4 +18,4 @@ application:
             - Node root
             - Date createDate
             - Date lastModifyDate
-
+            - DocumentType documentType

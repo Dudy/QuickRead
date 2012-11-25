@@ -10,25 +10,25 @@ public class Node implements Serializable {
     
     private static final long serialVersionUID = 1L;
 
-    private String title;
-    private String text;
+    private String key;
+    private String value;
     private Nodes children;
 
     public Node() {
         this("", "", null);
     }
     
-    public Node(String title) {
-        this(title, "", null);
+    public Node(String key) {
+        this(key, "", null);
     }
 
-    public Node(String title, String text) {
-        this(title, text, null);
+    public Node(String key, String value) {
+        this(key, value, null);
     }
     
-    public Node(String title, String text, Nodes children) {
-        this.title = title;
-        this.text = text;
+    public Node(String key, String value, Nodes children) {
+        this.key = key;
+        this.value = value;
         this.children = children;
         
         if (this.children == null) {
@@ -36,20 +36,20 @@ public class Node implements Serializable {
         }
     }
 
-    public String getTitle() {
-        return title;
+    public String getKey() {
+        return key;
     }
 
-    public void setTitle(String title) {
-        this.title = title;
+    public void setKey(String key) {
+        this.key = key;
     }
 
-    public String getText() {
-        return text;
+    public String getValue() {
+        return value;
     }
 
-    public void setText(String text) {
-        this.text = text;
+    public void setValue(String value) {
+        this.value = value;
     }
 
     public Nodes getChildren() {
@@ -76,8 +76,8 @@ public class Node implements Serializable {
     public String toString() {
         return
                 "node=[" +
-                "title=" + title + "," +
-                "text=" + text + "," +
+                "key=" + key + "," +
+                "value=" + value + "," +
                 children +
                 "]";
     }

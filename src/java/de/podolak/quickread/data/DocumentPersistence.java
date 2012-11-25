@@ -1,4 +1,4 @@
-package de.podolak.quickread.data.persistence;
+package de.podolak.quickread.data;
 
 import com.google.appengine.api.datastore.DatastoreService;
 import com.google.appengine.api.datastore.DatastoreServiceFactory;
@@ -7,8 +7,7 @@ import com.google.appengine.api.datastore.EntityNotFoundException;
 import com.google.appengine.api.datastore.Key;
 import com.google.appengine.api.datastore.KeyFactory;
 import com.google.appengine.api.datastore.Text;
-import de.podolak.quickread.data.Document;
-import de.podolak.quickread.data.Node;
+import de.podolak.quickread.Utilities;
 import java.io.StringReader;
 import java.util.Date;
 import java.util.logging.Level;
@@ -23,7 +22,8 @@ import org.xml.sax.InputSource;
  */
 public class DocumentPersistence {
     
-    //TODO: use the current user here, return empty document when no user is logged on
+    //TODO: use the current user here, return empty document when no user is logged on, read last document ID from cookie
+    //TODO: add metadata
     public static Document getLastDocument() {
         return loadDocument(1L);
     }
@@ -34,14 +34,13 @@ public class DocumentPersistence {
         try {
             Entity datastoreDocument = DatastoreServiceFactory.getDatastoreService().get(key);
             Document document = loadDocumentFromString(((Text)datastoreDocument.getProperty("content")).getValue());
-            document.setCreateDate(new Date((Long)datastoreDocument.getProperty("createDate")));
-            document.setLastModifyDate(new Date((Long)datastoreDocument.getProperty("lastModifyDate")));
             return document;
         } catch (EntityNotFoundException ex) {
             Logger.getLogger(DocumentPersistence.class.getName()).log(Level.INFO, "no Document with id {0} found, creating a new one", id);
             
             // create new Document, store immediately and hope the id is still not used ;-)
-            Document document = new Document(id, new Node("no title"), new Date(), new Date());
+            //TODO: read the current (= max) version data from metadata and use it here, use 1 for now
+            Document document = new Document(id, 1, new Node(Utilities.getI18NText("document.new")), new Date(), new Date(), DocumentType.COMMON);
             storeDocument(document);
             return document;
         }
@@ -51,7 +50,7 @@ public class DocumentPersistence {
         try {
             DocumentBuilderFactory builderFactory = DocumentBuilderFactory.newInstance();
             DocumentBuilder builder = builderFactory.newDocumentBuilder();
-            return DocumentHandler.deserializeDocument(builder.parse(new InputSource(new StringReader(content))));
+            return DocumentHandler.deserialize(builder.parse(new InputSource(new StringReader(content))));
         } catch (javax.xml.parsers.ParserConfigurationException e) {
             Logger.getLogger(DocumentPersistence.class.getName()).log(Level.SEVERE, "Fehler: kann keinen Parser erzeugen", e);
         } catch (org.xml.sax.SAXException e) {
@@ -65,31 +64,25 @@ public class DocumentPersistence {
     
     public static Document storeDocument(Document document) {
         DatastoreService datastore = DatastoreServiceFactory.getDatastoreService();
-
-        Long id = document.getId();
         Entity datastoreDocument;
         
-        if (id != null) {
-            Key key = KeyFactory.createKey("Document", id);
+        if (document.getId() != null) {
+            Key key = KeyFactory.createKey("Document", document.getId());
             
             try {
                 datastoreDocument = datastore.get(key);
-                datastoreDocument.setProperty("createDate", document.getCreateDate().getTime());
             } catch (EntityNotFoundException ex) {
-                datastoreDocument = new Entity("Document", id);
-                datastoreDocument.setProperty("createDate", new Date().getTime());
+                datastoreDocument = new Entity(key);
             }
         } else {
             datastoreDocument = new Entity("Document");
             document.setId(datastoreDocument.getKey().getId());
-            datastoreDocument.setProperty("createDate", new Date().getTime());
         }
         
         datastoreDocument.setProperty("content", new Text(DocumentHandler.serialize(document)));
-        datastoreDocument.setProperty("lastModifyDate", new Date().getTime());
         datastore.put(datastoreDocument);
         
         return document;
     }
-
+    
 }

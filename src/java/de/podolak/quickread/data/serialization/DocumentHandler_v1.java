@@ -1,6 +1,7 @@
-package de.podolak.quickread.data.persistence;
+package de.podolak.quickread.data.serialization;
 
 import de.podolak.quickread.data.Document;
+import de.podolak.quickread.data.DocumentType;
 import de.podolak.quickread.data.Node;
 import java.util.Date;
 import java.util.Stack;
@@ -9,14 +10,16 @@ import java.util.Stack;
  *
  * @author Dude
  */
-public class DocumentHandler {
+public class DocumentHandler_v1 {
+    
+    public static final Integer VERSION = 1;
     
     // <editor-fold defaultstate="collapsed" desc=" deserialization ">
     private static Document document;
     private static Stack<Node> nodeStack;
 
-    public static Document deserializeDocument(org.w3c.dom.Document inputDocument) {
-        DocumentHandler.nodeStack = new Stack<Node>();
+    public static Document deserialize(org.w3c.dom.Document inputDocument) {
+        DocumentHandler_v1.nodeStack = new Stack<Node>();
         org.w3c.dom.Element element = inputDocument.getDocumentElement();
         visitElement_document(element);
         return document;
@@ -27,24 +30,20 @@ public class DocumentHandler {
      */
     private static void visitElement_document(org.w3c.dom.Element element) {
         document = new Document();
+        document.setSerializationVersion(VERSION);
         
         // <document>
-        // element.getValue();
         org.w3c.dom.NamedNodeMap attrs = element.getAttributes();
         for (int i = 0; i < attrs.getLength(); i++) {
             org.w3c.dom.Attr attr = (org.w3c.dom.Attr) attrs.item(i);
             if (attr.getName().equals("id")) {
-                // <document id="???">
-                // attr.getValue();
                 document.setId(Long.parseLong(attr.getValue()));
             } else if (attr.getName().equals("createDate")) {
-                // <document createDate="???">
-                // attr.getValue();
                 document.setCreateDate(new Date(Long.parseLong(attr.getValue())));
             } else if (attr.getName().equals("lastModifyDate")) {
-                // <document lastModifyDate="???">
-                // attr.getValue();
                 document.setLastModifyDate(new Date(Long.parseLong(attr.getValue())));
+            } else if (attr.getName().equals("documentType")) {
+                document.setDocumentType(DocumentType.valueOf(attr.getValue()));
             }
         }
         org.w3c.dom.NodeList nodes = element.getChildNodes();
@@ -87,10 +86,8 @@ public class DocumentHandler {
         org.w3c.dom.NamedNodeMap attrs = element.getAttributes();
         for (int i = 0; i < attrs.getLength(); i++) {
             org.w3c.dom.Attr attr = (org.w3c.dom.Attr) attrs.item(i);
-            if (attr.getName().equals("title")) {
-                // <node title="???">
-                // attr.getValue();
-                n.setTitle(attr.getValue());
+            if (attr.getName().equals("key")) {
+                n.setKey(attr.getValue());
             }
         }
         org.w3c.dom.NodeList nodes = element.getChildNodes();
@@ -105,7 +102,7 @@ public class DocumentHandler {
                     if (nodeElement.getTagName().equals("node")) {
                         visitElement_node(nodeElement);
                     }
-                    if (nodeElement.getTagName().equals("text")) {
+                    if (nodeElement.getTagName().equals("value")) {
                         visitElement_text(nodeElement);
                     }
                     break;
@@ -124,7 +121,6 @@ public class DocumentHandler {
      */
     private static void visitElement_text(org.w3c.dom.Element element) {
         // <text>
-        // element.getValue();
         org.w3c.dom.NodeList nodes = element.getChildNodes();
         for (int i = 0; i < nodes.getLength(); i++) {
             org.w3c.dom.Node node = nodes.item(i);
@@ -133,7 +129,7 @@ public class DocumentHandler {
                     // ((org.w3c.dom.CDATASection)node).getData();
                     break;
                 case org.w3c.dom.Node.ELEMENT_NODE:
-                    org.w3c.dom.Element nodeElement = (org.w3c.dom.Element) node;
+                    // org.w3c.dom.Element nodeElement = (org.w3c.dom.Element) node;
                     break;
                 case org.w3c.dom.Node.PROCESSING_INSTRUCTION_NODE:
                     // ((org.w3c.dom.ProcessingInstruction)node).getTarget();
@@ -142,7 +138,7 @@ public class DocumentHandler {
                 case org.w3c.dom.Node.TEXT_NODE:
                     // ((org.w3c.dom.Text)node).getData();
                     
-                    nodeStack.peek().setText(((org.w3c.dom.Text)node).getData());
+                    nodeStack.peek().setValue(((org.w3c.dom.Text)node).getData());
                     
                     break;
             }
@@ -163,9 +159,11 @@ public class DocumentHandler {
         stringBuilder
                 .append("<document")
                 
+                .append(" serializationVersion=\"").append(document.getSerializationVersion()).append("\"")
                 .append(" id=\"").append(getFormattedId(document.getId())).append("\"")
                 .append(" createDate=\"").append(document.getCreateDate().getTime()).append("\"")
                 .append(" lastModifyDate=\"").append(document.getLastModifyDate().getTime()).append("\"")
+                .append(" documentType=\"").append(document.getDocumentType().name()).append("\"")
                 
                 .append(">");
         
@@ -175,26 +173,30 @@ public class DocumentHandler {
     
     private static void appendNode(StringBuilder stringBuilder, Node node) {
         // add opening tag
-        stringBuilder.append("<node title=\"");
-        if (node.getTitle() != null) {
-            stringBuilder.append(node.getTitle());
+        stringBuilder.append("<node key=\"");
+        if (node.getKey() != null) {
+            stringBuilder.append(node.getKey());
         }
-        stringBuilder.append("\">");
-        
-        // add text if present
-        if (node.getText() != null && !node.getText().trim().isEmpty()) {
-            stringBuilder.append("<text>");
-            stringBuilder.append(node.getText());
-            stringBuilder.append("</text>");
+        stringBuilder.append("\" value=\"");
+        if (node.getValue() != null) {
+            stringBuilder.append(node.getValue());
         }
         
-        // add child nodes if present
-        for (Node child : node.getChildren()) {
-            appendNode(stringBuilder, child);
+        if (node.getChildren().isEmpty()) {
+            // immediately close tag
+            stringBuilder.append("\"\\>");
+        } else {
+            // open tag and add closing tag later
+            stringBuilder.append("\">");
+
+            // add child nodes
+            for (Node child : node.getChildren()) {
+                appendNode(stringBuilder, child);
+            }
+
+            // add closing tag
+            stringBuilder.append("</node>");
         }
-        
-        // add closing tag
-        stringBuilder.append("</node>");
     }
     
     private static String getFormattedId(Long id) {
