@@ -12,8 +12,9 @@ database:
 
 application:
     POJO with four attributes:
-        - Long id
-        - Node root
-        - Date createDate
-        - Date lastModifyDate
+        Document.java
+            - Long id
+            - Node root
+            - Date createDate
+            - Date lastModifyDate
 

@@ -16,9 +16,6 @@ import com.vaadin.ui.VerticalLayout;
 import com.vaadin.ui.Window;
 import de.podolak.quickread.QuickReadApplication;
 import de.podolak.quickread.Utilities;
-import de.podolak.quickread.data.DocumentContainer;
-import java.util.Arrays;
-import java.util.List;
 
 @SuppressWarnings("serial")
 public class NodeForm extends Form implements ClickListener {
@@ -28,7 +25,6 @@ public class NodeForm extends Form implements ClickListener {
     private Button edit = new Button("Edit", (ClickListener) this);
 
     private final QuickReadApplication app;
-    private boolean newNodeMode = false;
 
     public NodeForm(final QuickReadApplication app) {
         this.app = app;
@@ -52,7 +48,7 @@ public class NodeForm extends Form implements ClickListener {
         setFormFieldFactory(new DefaultFieldFactory() {
             @Override
             public Field createField(Item item, Object propertyId, Component uiContext) {
-                Field field;
+                Field field = null;
                 
                 if ("text".equals(propertyId)) {
                     field = new TextArea(Utilities.getI18NText("edit.text"));
@@ -64,8 +60,9 @@ public class NodeForm extends Form implements ClickListener {
                     field.setWidth("100%");
                     field.addStyleName("edit-title");
                 } else {
-                    field = super.createField(item, propertyId, uiContext);
-                    field.setWidth("100%");
+// omit oither fields (e.g. icon)
+//                    field = super.createField(item, propertyId, uiContext);
+//                    field.setWidth("100%");
                 }
                 
                 return field;
@@ -87,23 +84,11 @@ public class NodeForm extends Form implements ClickListener {
             }
             
             commit();
-
-            if (newNodeMode) {
-//                Item addedItem = app.getDataSource().addItem(document);
-//                setItemDataSource(addedItem);
-//                newNodeMode = false;
-                //TODO
-            }
             setReadOnly(true);
             
             app.save();
         } else if (source == cancel) {
-            if (newNodeMode) {
-                newNodeMode = false;
-                setItemDataSource(null);
-            } else {
-                discard();
-            }
+            discard();
             setReadOnly(true);
         } else if (source == edit) {
             if (!UserServiceFactory.getUserService().isUserLoggedIn()) {
@@ -120,11 +105,8 @@ public class NodeForm extends Form implements ClickListener {
 
     @Override
     public void setItemDataSource(Item newDataSource) {
-        newNodeMode = false;
-
         if (newDataSource != null) {
-            List<Object> orderedProperties = Arrays.asList(DocumentContainer.NATURAL_COL_ORDER);
-            super.setItemDataSource(newDataSource, orderedProperties);
+            super.setItemDataSource(newDataSource);
             setReadOnly(true);
             getFooter().setVisible(true);
         } else {
