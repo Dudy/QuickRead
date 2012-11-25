@@ -1,5 +1,6 @@
 package de.podolak.quickread;
 
+import com.google.appengine.api.users.UserServiceFactory;
 import com.vaadin.Application;
 import com.vaadin.data.Container;
 import com.vaadin.data.Container.ItemSetChangeEvent;
@@ -15,9 +16,6 @@ import com.vaadin.service.ApplicationContext;
 import com.vaadin.service.ApplicationContext.TransactionListener;
 import com.vaadin.terminal.Sizeable;
 import com.vaadin.terminal.ThemeResource;
-import com.vaadin.ui.Button;
-import com.vaadin.ui.Button.ClickEvent;
-import com.vaadin.ui.Button.ClickListener;
 import com.vaadin.ui.Component;
 import com.vaadin.ui.HorizontalSplitPanel;
 import com.vaadin.ui.VerticalLayout;
@@ -127,7 +125,7 @@ public class QuickReadApplication extends Application implements
         horizontalSplit.setSecondComponent(c);
     }
 
-    public HelpWindow getHelpWindow() {
+    private HelpWindow getHelpWindow() {
         if (helpWindow == null) {
             helpWindow = new HelpWindow();
         }
@@ -144,6 +142,14 @@ public class QuickReadApplication extends Application implements
 
     public void showHelpWindow() {
         getMainWindow().addWindow(getHelpWindow());
+    }
+    
+    public void showMessage(String caption, String description) {
+        window.showNotification(caption, description);
+    }
+    
+    public void showMessage(String caption, String description, int type) {
+        window.showNotification(caption, description, type);
     }
 
     // <editor-fold defaultstate="collapsed" desc=" event handlers ">
@@ -198,12 +204,12 @@ public class QuickReadApplication extends Application implements
                 new Date()));
 
         if (newDocument == null) {
-            window.showNotification(
+            showMessage(
                     Utilities.getI18NText("action.save.error.caption"),
                     Utilities.getI18NText("action.save.error.description"),
                     Notification.TYPE_WARNING_MESSAGE);
         } else {
-            window.showNotification(
+            showMessage(
                     Utilities.getI18NText("action.save.success.caption"),
                     Utilities.getI18NText("action.save.success.description"));
             createDataContainer(newDocument);
@@ -217,6 +223,14 @@ public class QuickReadApplication extends Application implements
     }
 
     public void addNode() {
+        if (!UserServiceFactory.getUserService().isUserLoggedIn()) {
+            showMessage(
+                    Utilities.getI18NText("authentication.noUser.caption"),
+                    Utilities.getI18NText("authentication.addNode.description"),
+                    Window.Notification.TYPE_WARNING_MESSAGE);
+            return;
+        }
+        
         Object selectedItemIdObject = navigationTree.getValue();
 
         if (selectedItemIdObject != null) {
@@ -241,6 +255,14 @@ public class QuickReadApplication extends Application implements
     }
 
     public void removeNode() {
+        if (!UserServiceFactory.getUserService().isUserLoggedIn()) {
+            showMessage(
+                    Utilities.getI18NText("authentication.noUser.caption"),
+                    Utilities.getI18NText("authentication.removeNode.description"),
+                    Window.Notification.TYPE_WARNING_MESSAGE);
+            return;
+        }
+        
         final Object selectedItemIdObject = navigationTree.getValue();
 
         if (selectedItemIdObject != null) {

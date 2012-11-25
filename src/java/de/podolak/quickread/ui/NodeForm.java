@@ -1,5 +1,6 @@
 package de.podolak.quickread.ui;
 
+import com.google.appengine.api.users.UserServiceFactory;
 import com.vaadin.data.Item;
 import com.vaadin.ui.Button;
 import com.vaadin.ui.Button.ClickEvent;
@@ -12,6 +13,7 @@ import com.vaadin.ui.HorizontalLayout;
 import com.vaadin.ui.TextArea;
 import com.vaadin.ui.TextField;
 import com.vaadin.ui.VerticalLayout;
+import com.vaadin.ui.Window;
 import de.podolak.quickread.QuickReadApplication;
 import de.podolak.quickread.Utilities;
 import de.podolak.quickread.data.DocumentContainer;
@@ -76,6 +78,14 @@ public class NodeForm extends Form implements ClickListener {
         Button source = event.getButton();
         
         if (source == save) {
+            if (!UserServiceFactory.getUserService().isUserLoggedIn()) {
+                app.showMessage(
+                        Utilities.getI18NText("authentication.noUser.caption"),
+                        Utilities.getI18NText("authentication.save.description"),
+                        Window.Notification.TYPE_WARNING_MESSAGE);
+                return;
+            }
+            
             commit();
 
             if (newNodeMode) {
@@ -96,6 +106,14 @@ public class NodeForm extends Form implements ClickListener {
             }
             setReadOnly(true);
         } else if (source == edit) {
+            if (!UserServiceFactory.getUserService().isUserLoggedIn()) {
+                app.showMessage(
+                        Utilities.getI18NText("authentication.noUser.caption"),
+                        Utilities.getI18NText("authentication.save.description"),
+                        Window.Notification.TYPE_WARNING_MESSAGE);
+                return;
+            }
+            
             setReadOnly(false);
         }
     }
