@@ -1,4 +1,4 @@
-package de.podolak.quickread.data;
+package de.podolak.quickread.data.datastore;
 
 import com.google.appengine.api.datastore.DatastoreService;
 import com.google.appengine.api.datastore.DatastoreServiceFactory;
@@ -6,9 +6,13 @@ import com.google.appengine.api.datastore.Entity;
 import com.google.appengine.api.datastore.EntityNotFoundException;
 import com.google.appengine.api.datastore.Key;
 import com.google.appengine.api.datastore.KeyFactory;
+import com.google.appengine.api.datastore.PreparedQuery;
+import com.google.appengine.api.datastore.Query;
 import com.google.appengine.api.datastore.Text;
 import de.podolak.quickread.Utilities;
+import de.podolak.quickread.data.Project;
 import java.io.StringReader;
+import java.util.ArrayList;
 import java.util.Date;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -25,7 +29,7 @@ public class DocumentPersistence {
     //TODO: use the current user here, return empty document when no user is logged on, read last document ID from cookie
     //TODO: add metadata
     public static Document getLastDocument() {
-        return loadDocument(1L);
+        return loadDocument(2L);
     }
     
     public static Document loadDocument(Long id) {
@@ -83,6 +87,55 @@ public class DocumentPersistence {
         datastore.put(datastoreDocument);
         
         return document;
+    }
+    
+    public static void emptyDatastore() {
+        DatastoreService datastore = DatastoreServiceFactory.getDatastoreService();
+        Query q = new Query("Document");
+        PreparedQuery pq = datastore.prepare(q);
+        
+        for (Entity entity : pq.asIterable()) {
+            datastore.delete(entity.getKey());
+        }
+    }
+    
+    public static Integer getDefaultVersion() {
+        // TODO: think about storing this in metadata in datastore
+        return 2;
+    }
+
+    public static ArrayList<Document> loadProjectList() {
+        ArrayList<Document> documentList = new ArrayList<Document>();
+        DatastoreService datastore = DatastoreServiceFactory.getDatastoreService();
+        Query q = new Query("Document");
+        PreparedQuery pq = datastore.prepare(q);
+        
+        for (Entity entity : pq.asIterable()) {
+            Document document = loadDocumentFromString(((Text)entity.getProperty("content")).getValue());
+            
+            if (document.getDocumentType() == DocumentType.PROJECT) {
+                documentList.add(document);
+            }
+        }
+        
+        return documentList;
+    }
+    
+    public static ArrayList<Project> loadProjectList___new() {
+        ArrayList<Project> projectList = new ArrayList<Project>();
+        DatastoreService datastore = DatastoreServiceFactory.getDatastoreService();
+        Query q = new Query("Document");
+        PreparedQuery pq = datastore.prepare(q);
+        
+        for (Entity entity : pq.asIterable()) {
+            Document document = loadDocumentFromString(((Text)entity.getProperty("content")).getValue());
+            
+            if (document.getDocumentType() == DocumentType.PROJECT) {
+                projectList.add((Project)document);
+            }
+        }
+        
+        return projectList;
     }
     
 }

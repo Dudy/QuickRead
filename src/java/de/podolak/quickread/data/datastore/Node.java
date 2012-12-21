@@ -1,6 +1,8 @@
-package de.podolak.quickread.data;
+package de.podolak.quickread.data.datastore;
 
 import java.io.Serializable;
+import java.util.ArrayList;
+import java.util.List;
 
 /**
  *
@@ -70,6 +72,49 @@ public class Node implements Serializable {
     
     public int getNumberOfChildren() {
         return this.children.size();
+    }
+    
+    public List<String> getValueListByKey(String key) {
+        if (key == null || key.isEmpty()) {
+            return null;
+        }
+        
+        ArrayList<String> valueList = new ArrayList<String>();
+        
+        if (key.equals(this.key)) {
+            valueList.add(value);
+        }
+        
+        if (children != null && children.size() > 0) {
+            for (Node child : children) {
+                valueList.addAll(child.getValueListByKey(key));
+            }
+        }
+        
+        return valueList;
+    }
+    
+    public List<String> getValueListByKeyPath(String keyPath) {
+        if (keyPath == null || keyPath.isEmpty()) {
+            return null;
+        }
+        
+        ArrayList<String> valueList = new ArrayList<String>();
+        String[] parts = keyPath.split("\\.", 2);
+        
+        if (parts[0].equals(key)) {
+            if (parts.length == 1) {
+                valueList.add(value);
+            } else {
+                if (children != null && children.size() > 0) {
+                    for (Node child : children) {
+                        valueList.addAll(child.getValueListByKeyPath(parts[1]));
+                    }
+                }
+            }
+        }
+        
+        return valueList;
     }
 
     @Override

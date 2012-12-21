@@ -1,8 +1,6 @@
 database:
-    GAE datastore Entity with three properties:
-        - content
-        - createDate
-        - lastModifyDate
+    GAE datastore Entity with only one property (content) at the moment. TODO: add more properties later, like
+    following demo code shows.
     demo code:
         Entity document = new Entity("Document", id);
         document.setProperty("content", "custom text");

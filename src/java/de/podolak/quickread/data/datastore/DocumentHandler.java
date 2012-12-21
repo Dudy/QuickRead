@@ -1,7 +1,7 @@
-package de.podolak.quickread.data;
+package de.podolak.quickread.data.datastore;
 
-import de.podolak.quickread.data.serialization.DocumentHandler_v1;
-import de.podolak.quickread.data.serialization.DocumentHandler_v2;
+import de.podolak.quickread.data.datastore.serialization.DocumentHandler_v1;
+import de.podolak.quickread.data.datastore.serialization.DocumentHandler_v2;
 import org.w3c.dom.Attr;
 import org.w3c.dom.NamedNodeMap;
 import org.w3c.dom.NodeList;

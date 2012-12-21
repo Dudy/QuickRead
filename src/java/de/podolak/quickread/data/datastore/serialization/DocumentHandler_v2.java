@@ -1,8 +1,8 @@
-package de.podolak.quickread.data.serialization;
+package de.podolak.quickread.data.datastore.serialization;
 
-import de.podolak.quickread.data.Document;
-import de.podolak.quickread.data.DocumentType;
-import de.podolak.quickread.data.Node;
+import de.podolak.quickread.data.datastore.Document;
+import de.podolak.quickread.data.datastore.DocumentType;
+import de.podolak.quickread.data.datastore.Node;
 import java.util.Date;
 import java.util.Stack;
 
@@ -11,6 +11,10 @@ import java.util.Stack;
  * @author Dude
  */
 public class DocumentHandler_v2 {
+    
+    // This version differs from v1 in the storage mechanism for node value.
+    // While v1 stored the node value in a <value> subtag this v2 stores the
+    // value within another node tag attribute "value".
     
     public static final Integer VERSION = 2;
     
@@ -29,23 +33,33 @@ public class DocumentHandler_v2 {
      * Scan through org.w3c.dom.Element named document.
      */
     private static void visitElement_document(org.w3c.dom.Element element) {
-        document = new Document();
-        document.setSerializationVersion(VERSION);
+        Long id = null;
+        Date createDate = null;
+        Date lastModifyDate = null;
+        DocumentType documentType = null;
         
         // <document>
         org.w3c.dom.NamedNodeMap attrs = element.getAttributes();
         for (int i = 0; i < attrs.getLength(); i++) {
             org.w3c.dom.Attr attr = (org.w3c.dom.Attr) attrs.item(i);
             if (attr.getName().equals("id")) {
-                document.setId(Long.parseLong(attr.getValue()));
+                id = Long.parseLong(attr.getValue());
             } else if (attr.getName().equals("createDate")) {
-                document.setCreateDate(new Date(Long.parseLong(attr.getValue())));
+                createDate = new Date(Long.parseLong(attr.getValue()));
             } else if (attr.getName().equals("lastModifyDate")) {
-                document.setLastModifyDate(new Date(Long.parseLong(attr.getValue())));
+                lastModifyDate = new Date(Long.parseLong(attr.getValue()));
             } else if (attr.getName().equals("documentType")) {
-                document.setDocumentType(DocumentType.valueOf(attr.getValue()));
+                documentType = DocumentType.valueOf(attr.getValue());
+                document = documentType.getInstanceOf();
             }
         }
+        
+        document.setId(id);
+        document.setSerializationVersion(VERSION);
+        document.setCreateDate(createDate);
+        document.setLastModifyDate(lastModifyDate);
+        document.setDocumentType(documentType);
+        
         org.w3c.dom.NodeList nodes = element.getChildNodes();
         for (int i = 0; i < nodes.getLength(); i++) {
             org.w3c.dom.Node node = nodes.item(i);
@@ -88,6 +102,8 @@ public class DocumentHandler_v2 {
             org.w3c.dom.Attr attr = (org.w3c.dom.Attr) attrs.item(i);
             if (attr.getName().equals("key")) {
                 n.setKey(attr.getValue());
+            } else if (attr.getName().equals("value")) {
+                n.setValue(attr.getValue());
             }
         }
         org.w3c.dom.NodeList nodes = element.getChildNodes();
@@ -102,9 +118,6 @@ public class DocumentHandler_v2 {
                     if (nodeElement.getTagName().equals("node")) {
                         visitElement_node(nodeElement);
                     }
-                    if (nodeElement.getTagName().equals("value")) {
-                        visitElement_text(nodeElement);
-                    }
                     break;
                 case org.w3c.dom.Node.PROCESSING_INSTRUCTION_NODE:
                     // ((org.w3c.dom.ProcessingInstruction)node).getTarget();
@@ -114,35 +127,6 @@ public class DocumentHandler_v2 {
         }
         
         nodeStack.pop();
-    }
-
-    /**
-     * Scan through org.w3c.dom.Element named text.
-     */
-    private static void visitElement_text(org.w3c.dom.Element element) {
-        // <text>
-        org.w3c.dom.NodeList nodes = element.getChildNodes();
-        for (int i = 0; i < nodes.getLength(); i++) {
-            org.w3c.dom.Node node = nodes.item(i);
-            switch (node.getNodeType()) {
-                case org.w3c.dom.Node.CDATA_SECTION_NODE:
-                    // ((org.w3c.dom.CDATASection)node).getData();
-                    break;
-                case org.w3c.dom.Node.ELEMENT_NODE:
-                    // org.w3c.dom.Element nodeElement = (org.w3c.dom.Element) node;
-                    break;
-                case org.w3c.dom.Node.PROCESSING_INSTRUCTION_NODE:
-                    // ((org.w3c.dom.ProcessingInstruction)node).getTarget();
-                    // ((org.w3c.dom.ProcessingInstruction)node).getData();
-                    break;
-                case org.w3c.dom.Node.TEXT_NODE:
-                    // ((org.w3c.dom.Text)node).getData();
-                    
-                    nodeStack.peek().setValue(((org.w3c.dom.Text)node).getData());
-                    
-                    break;
-            }
-        }
     }
     // </editor-fold>
 
@@ -155,7 +139,7 @@ public class DocumentHandler_v2 {
         return sb.toString();
     }
     
-    private static void appendDocument(StringBuilder stringBuilder, de.podolak.quickread.data.Document document) {
+    private static void appendDocument(StringBuilder stringBuilder, de.podolak.quickread.data.datastore.Document document) {
         stringBuilder
                 .append("<document")
                 
@@ -184,7 +168,7 @@ public class DocumentHandler_v2 {
         
         if (node.getChildren().isEmpty()) {
             // immediately close tag
-            stringBuilder.append("\"\\>");
+            stringBuilder.append("\"/>");
         } else {
             // open tag and add closing tag later
             stringBuilder.append("\">");

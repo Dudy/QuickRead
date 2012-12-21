@@ -1,4 +1,4 @@
-package de.podolak.quickread.data;
+package de.podolak.quickread.data.datastore;
 
 import java.util.ArrayList;
 
