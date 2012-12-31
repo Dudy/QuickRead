@@ -17,3 +17,381 @@ application:
             - Date createDate
             - Date lastModifyDate
             - DocumentType documentType
+    other classes may be derived from Document
+    descendant classes obey the following convention
+        - root node always contains a caption string (key = "root", value = "some text")
+        - exactly one child node of the root node has the key "data" (value is irrelevant, e.g. empty string)
+        - other child nodes of the root node hold metadata (arbitrary nodes with key/value and arbitrary child node tree depth)
+
+example:
+Project: {
+	Node: {
+		"key": "root",
+		"value": "Projekt 1",
+		Node: {
+			"key": "data",
+			"value": "",
+			Node: {
+				"key": "documentID",
+				"value": "2"
+			},
+			Node: {
+				"key": "documentID",
+				"value": "3"
+			}
+		},
+		Node: {
+			"key": "id",
+			"value": "1"
+		},
+		Node: {
+			"key": "serializationVersion",
+			"value": "2"
+		},
+		Node: {
+			"key": "createDate",
+			"value": "1000000000"
+		},
+		Node: {
+			"key": "lastModifyDate",
+			"value": "1000000100"
+		},
+		Node: {
+			"key": "documentType",
+			"value": "PROJECT"
+		}
+	}
+}
+
+Book: {
+	Node: {
+		"key": "caption",
+		"value": "Dirk Podolak - The Joy of Programming",
+		Node: {
+			"key": "data",
+			"value": "",
+			Node: {
+				"key": "introduction",
+				"value": "Dirk Podolak talks about the joy of programming."
+			},
+			Node: {
+				"key": "contents",
+				"value": "Start here to explore why Dirk Podolak thinks it is a joy to write computer programs."
+				Node: {
+					"key": "chapter 1",
+					"value": "todo: summary of chapter 1"
+				},
+				Node: {
+					"key": "chapter 2",
+					"value": "todo: summary of chapter 2"
+				},
+				Node: {
+					"key": "chapter 3",
+					"value": "todo: summary of chapter 3"
+				}
+			},
+			Node: {
+				"key": "index",
+				"value": "lookup table of some important terms"
+			}
+		},
+		Node: {
+			"key": "id",
+			"value": "2L"
+		},
+		Node: {
+			"key": "serializationVersion",
+			"value": "2"
+		},
+		Node: {
+			"key": "createDate",
+			"value": "1000000001"
+		},
+		Node: {
+			"key": "lastModifyDate",
+			"value": "1000000002"
+		},
+		Node: {
+			"key": "documentType",
+			"value": "BOOK"
+		},
+		Node: {
+			"key": "author",
+			"value": "Dirk Podolak"
+		},
+		Node: {
+			"key": "title",
+			"value": "the joy of programming"
+		}
+	}
+}
+
+Book: {
+	Node: {
+		"key": "caption",
+		"value": "Dirk Podolak - The Pain of Programming",
+		Node: {
+			"key": "data",
+			"value": "",
+			Node: {
+				"key": "introduction",
+				"value": "Dirk Podolak talks about the pain of programming."
+			},
+			Node: {
+				"key": "contents",
+				"value": "Start here to explore why Dirk Podolak thinks it is a pain to write computer programs."
+				Node: {
+					"key": "chapter 1",
+					"value": "todo: summary of chapter 1"
+				},
+				Node: {
+					"key": "chapter 2",
+					"value": "todo: summary of chapter 2"
+				},
+				Node: {
+					"key": "chapter 3",
+					"value": "todo: summary of chapter 3"
+				}
+			},
+			Node: {
+				"key": "index",
+				"value": "lookup table of some important terms"
+			}
+		},
+		Node: {
+			"key": "id",
+			"value": "3L"
+		},
+		Node: {
+			"key": "serializationVersion",
+			"value": "2"
+		},
+		Node: {
+			"key": "createDate",
+			"value": "1000000003"
+		},
+		Node: {
+			"key": "lastModifyDate",
+			"value": "1000000004"
+		},
+		Node: {
+			"key": "documentType",
+			"value": "BOOK"
+		},
+		Node: {
+			"key": "author",
+			"value": "Dirk Podolak"
+		},
+		Node: {
+			"key": "title",
+			"value": "the pain of programming"
+		}
+	}
+}
+    
+
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+Project: {
+	Node: {
+		"key": "caption",
+		"value": "Projekt 2",
+		Node: {
+			"key": "data",
+			"value": "",
+			Node: {
+				"key": "documentID",
+				"value": "6"
+			},
+			Node: {
+				"key": "documentID",
+				"value": "3"
+			},
+			Node: {
+				"key": "documentID",
+				"value": "5"
+			}
+		},
+		Node: {
+			"key": "id",
+			"value": "4"
+		},
+		Node: {
+			"key": "serializationVersion",
+			"value": "2"
+		},
+		Node: {
+			"key": "createDate",
+			"value": "1000000200"
+		},
+		Node: {
+			"key": "lastModifyDate",
+			"value": "1000000300"
+		},
+		Node: {
+			"key": "documentType",
+			"value": "PROJECT"
+		}
+	}
+}
+
+Song: {
+	Node: {
+		"key": "caption",
+		"value": "Dirk Podolak - Phuture Paradise",
+		Node: {
+			"key": "data",
+			"value": "",
+			Node: {
+				"key": "text",
+				"value": "the future ... is paradise (30 times)"
+			},
+			Node: {
+				"key": "music",
+				"value": "three instruments"
+				Node: {
+					"key": "percussion",
+					"value": "dumm de dumm ... blizzzzzz (15 times)"
+				},
+				Node: {
+					"key": "triangle",
+					"value": "dschingggg dschingggg (60 times)"
+				},
+				Node: {
+					"key": "piano",
+					"value": "pling pling plong plang pling (22 times)"
+				}
+			}
+		},
+		Node: {
+			"key": "id",
+			"value": "5L"
+		},
+		Node: {
+			"key": "serializationVersion",
+			"value": "2"
+		},
+		Node: {
+			"key": "createDate",
+			"value": "1000000201"
+		},
+		Node: {
+			"key": "lastModifyDate",
+			"value": "1000000202"
+		},
+		Node: {
+			"key": "documentType",
+			"value": "SONG"
+		},
+		Node: {
+			"key": "artist",
+			"value": "Dirk Podolak"
+		},
+		Node: {
+			"key": "title",
+			"value": "Phuture Paradise"
+		}
+	}
+}
+
+Book: {
+	Node: {
+		"key": "caption",
+		"value": "Dirk Podolak - Music for the People",
+		Node: {
+			"key": "data",
+			"value": "",
+			Node: {
+				"key": "introduction",
+				"value": "Dirk Podolak talks about how music can reach peoples hearts easier than words."
+			},
+			Node: {
+				"key": "contents",
+				"value": "Start here to explore how Dirk Podolak thinks music can change the future."
+				Node: {
+					"key": "chapter 1",
+					"value": "todo: summary of chapter 1"
+				},
+				Node: {
+					"key": "chapter 2",
+					"value": "todo: summary of chapter 2"
+				},
+				Node: {
+					"key": "chapter 3",
+					"value": "todo: summary of chapter 3"
+				},
+				Node: {
+					"key": "chapter 4",
+					"value": "todo: summary of chapter 4"
+				},
+				Node: {
+					"key": "chapter 5",
+					"value": "todo: summary of chapter 5"
+				}
+			},
+			Node: {
+				"key": "index",
+				"value": "lookup table of some important terms"
+			}
+		},
+		Node: {
+			"key": "id",
+			"value": "6L"
+		},
+		Node: {
+			"key": "serializationVersion",
+			"value": "2"
+		},
+		Node: {
+			"key": "createDate",
+			"value": "1000000203"
+		},
+		Node: {
+			"key": "lastModifyDate",
+			"value": "1000000204"
+		},
+		Node: {
+			"key": "documentType",
+			"value": "BOOK"
+		},
+		Node: {
+			"key": "author",
+			"value": "Dirk Podolak"
+		},
+		Node: {
+			"key": "title",
+			"value": "music for the people"
+		}
+	}
+}

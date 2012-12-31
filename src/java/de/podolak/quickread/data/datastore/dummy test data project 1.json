@@ -1,0 +1,164 @@
+{
+    "Project": {
+        "Node": {
+            "key": "root",
+            "value": "Projekt 1",
+            "Node": {
+                "key": "data",
+                "value": "",
+                "Node": {
+                    "key": "documentID",
+                    "value": "2"
+                },
+                "Node": {
+                    "key": "documentID",
+                    "value": "3"
+                }
+            },
+            "Node": {
+                "key": "id",
+                "value": "1"
+            },
+            "Node": {
+                "key": "serializationVersion",
+                "value": "2"
+            },
+            "Node": {
+                "key": "createDate",
+                "value": "1000000000"
+            },
+            "Node": {
+                "key": "lastModifyDate",
+                "value": "1000000100"
+            },
+            "Node": {
+                "key": "documentType",
+                "value": "PROJECT"
+            }
+        }
+    },
+    "Book": {
+        "Node": {
+            "key": "caption",
+            "value": "Dirk Podolak - The Joy of Programming",
+            "Node": {
+                "key": "data",
+                "value": "",
+                "Node": {
+                    "key": "introduction",
+                    "value": "Dirk Podolak talks about the joy of programming."
+                },
+                "Node": {
+                    "key": "contents",
+                    "value": "Start here to explore why Dirk Podolak thinks it is a joy to write computer programs.",
+                    "Node": {
+                        "key": "chapter 1",
+                        "value": "todo: summary of chapter 1"
+                    },
+                    "Node": {
+                        "key": "chapter 2",
+                        "value": "todo: summary of chapter 2"
+                    },
+                    "Node": {
+                        "key": "chapter 3",
+                        "value": "todo: summary of chapter 3"
+                    }
+                },
+                "Node": {
+                    "key": "index",
+                    "value": "lookup table of some important terms"
+                }
+            },
+            "Node": {
+                "key": "id",
+                "value": "2L"
+            },
+            "Node": {
+                "key": "serializationVersion",
+                "value": "2"
+            },
+            "Node": {
+                "key": "createDate",
+                "value": "1000000001"
+            },
+            "Node": {
+                "key": "lastModifyDate",
+                "value": "1000000002"
+            },
+            "Node": {
+                "key": "documentType",
+                "value": "BOOK"
+            },
+            "Node": {
+                "key": "author",
+                "value": "Dirk Podolak"
+            },
+            "Node": {
+                "key": "title",
+                "value": "the joy of programming"
+            }
+        }
+    },
+    "Book": {
+        "Node": {
+            "key": "caption",
+            "value": "Dirk Podolak - The Pain of Programming",
+            "Node": {
+                "key": "data",
+                "value": "",
+                "Node": {
+                    "key": "introduction",
+                    "value": "Dirk Podolak talks about the pain of programming."
+                },
+                "Node": {
+                    "key": "contents",
+                    "value": "Start here to explore why Dirk Podolak thinks it is a pain to write computer programs.",
+                    "Node": {
+                        "key": "chapter 1",
+                        "value": "todo: summary of chapter 1"
+                    },
+                    "Node": {
+                        "key": "chapter 2",
+                        "value": "todo: summary of chapter 2"
+                    },
+                    "Node": {
+                        "key": "chapter 3",
+                        "value": "todo: summary of chapter 3"
+                    }
+                },
+                "Node": {
+                    "key": "index",
+                    "value": "lookup table of some important terms"
+                }
+            },
+            "Node": {
+                "key": "id",
+                "value": "3L"
+            },
+            "Node": {
+                "key": "serializationVersion",
+                "value": "2"
+            },
+            "Node": {
+                "key": "createDate",
+                "value": "1000000003"
+            },
+            "Node": {
+                "key": "lastModifyDate",
+                "value": "1000000004"
+            },
+            "Node": {
+                "key": "documentType",
+                "value": "BOOK"
+            },
+            "Node": {
+                "key": "author",
+                "value": "Dirk Podolak"
+            },
+            "Node": {
+                "key": "title",
+                "value": "the pain of programming"
+            }
+        }
+    }
+}

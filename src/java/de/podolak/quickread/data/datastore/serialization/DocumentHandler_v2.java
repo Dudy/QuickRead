@@ -3,8 +3,14 @@ package de.podolak.quickread.data.datastore.serialization;
 import de.podolak.quickread.data.datastore.Document;
 import de.podolak.quickread.data.datastore.DocumentType;
 import de.podolak.quickread.data.datastore.Node;
+import java.io.StringReader;
 import java.util.Date;
 import java.util.Stack;
+import java.util.logging.Level;
+import java.util.logging.Logger;
+import javax.xml.parsers.DocumentBuilder;
+import javax.xml.parsers.DocumentBuilderFactory;
+import org.xml.sax.InputSource;
 
 /**
  *
@@ -21,11 +27,23 @@ public class DocumentHandler_v2 {
     // <editor-fold defaultstate="collapsed" desc=" deserialization ">
     private static Document document;
     private static Stack<Node> nodeStack;
-
-    public static Document deserialize(org.w3c.dom.Document inputDocument) {
-        DocumentHandler_v2.nodeStack = new Stack<Node>();
-        org.w3c.dom.Element element = inputDocument.getDocumentElement();
-        visitElement_document(element);
+    
+    public static Document deserialize(String content) {
+        try {
+            DocumentBuilderFactory builderFactory = DocumentBuilderFactory.newInstance();
+            DocumentBuilder builder = builderFactory.newDocumentBuilder();
+            org.w3c.dom.Document inputDocument = builder.parse(new InputSource(new StringReader(content)));
+            DocumentHandler_v2.nodeStack = new Stack<Node>();
+            org.w3c.dom.Element element = inputDocument.getDocumentElement();
+            visitElement_document(element);
+        } catch (javax.xml.parsers.ParserConfigurationException e) {
+            Logger.getLogger(DocumentHandler_v2.class.getName()).log(Level.SEVERE, "Fehler: kann keinen Parser erzeugen", e);
+        } catch (org.xml.sax.SAXException e) {
+            Logger.getLogger(DocumentHandler_v2.class.getName()).log(Level.SEVERE, "Fehler: kann das document nicht parsen", e);
+        } catch (java.io.IOException e) {
+            Logger.getLogger(DocumentHandler_v2.class.getName()).log(Level.SEVERE, "Fehler: kann das document nicht öffnen", e);
+        }
+        
         return document;
     }
     

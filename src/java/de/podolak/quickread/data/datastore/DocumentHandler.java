@@ -2,9 +2,7 @@ package de.podolak.quickread.data.datastore;
 
 import de.podolak.quickread.data.datastore.serialization.DocumentHandler_v1;
 import de.podolak.quickread.data.datastore.serialization.DocumentHandler_v2;
-import org.w3c.dom.Attr;
-import org.w3c.dom.NamedNodeMap;
-import org.w3c.dom.NodeList;
+import de.podolak.quickread.data.datastore.serialization.DocumentHandler_v3;
 
 /**
  *
@@ -18,12 +16,14 @@ public class DocumentHandler {
                 return DocumentHandler_v1.serialize(document);
             case 2:
                 return DocumentHandler_v2.serialize(document);
+            case 3:
+                return DocumentHandler_v3.serialize(document);
             default:
                 throw new AssertionError("unknown serialization version '" + document.getSerializationVersion() + "'");
         }
     }
     
-    public static Document deserialize(org.w3c.dom.Document inputDocument) {
+    public static Document deserialize(String inputDocument) {
         Integer version = getSerializationVersion(inputDocument);
         
         if (version == null) {
@@ -35,21 +35,47 @@ public class DocumentHandler {
                 return DocumentHandler_v1.deserialize(inputDocument);
             case 2:
                 return DocumentHandler_v2.deserialize(inputDocument);
+            case 3:
+                return DocumentHandler_v3.deserialize(inputDocument);
             default:
                 throw new AssertionError("unknown serialization version '" + version+ "'");
         }
     }
     
-    private static Integer getSerializationVersion(org.w3c.dom.Document inputDocument) {
+    private static Integer getSerializationVersion(String inputDocument) {
         Integer version = null;
-        NodeList documentElements = inputDocument.getElementsByTagName("document");
-        
-        if (documentElements.getLength() > 0) {
-            NamedNodeMap attributes = documentElements.item(0).getAttributes();
-            Attr namedItem = (Attr) attributes.getNamedItem("serializationVersion");
+
+        if (inputDocument != null) {
+            version = getSerializationVersionByMarkers(inputDocument, " serializationVersion=\n", "\"");
             
-            if (namedItem != null) {
-                version = Integer.parseInt(namedItem.getValue());
+            if (version == null) {
+                version = getSerializationVersionByMarkers(inputDocument, "\"key\":\"serializationVersion\",\"value\":\"", "\",\"children\"");
+            }
+        }
+        
+        return version;
+    }
+    
+    private static Integer getSerializationVersionByMarkers(String input, String startMarker, String endMarker) {
+        Integer version = null;
+        int startIndex;
+        int endIndex;
+        String versionString;
+        
+        if (input != null) {
+            startIndex = input.indexOf(startMarker);
+            if (startIndex >= 0) {
+                endIndex = input.indexOf(endMarker, startIndex + startMarker.length());
+                if (endIndex > startIndex) {
+                    versionString = input.substring(startIndex + startMarker.length(), endIndex);
+                    if (versionString != null && !versionString.isEmpty()) {
+                        try {
+                            version = Integer.parseInt(versionString);
+                        } catch (NumberFormatException e) {
+                            // noop
+                        }
+                    }
+                }
             }
         }
         

@@ -17,6 +17,7 @@ import javax.servlet.http.HttpServletRequest;
  */
 public class Toolbar extends HorizontalLayout {
 
+    private Button projectManagement = new Button(Utilities.getI18NText("action.projectManagement.button.caption"));
     private Button addNode = new Button(Utilities.getI18NText("action.addNode.button.caption"));
     private Button removeNode = new Button(Utilities.getI18NText("action.removeNode.button.caption"));
     private Button search = new Button(Utilities.getI18NText("action.search.button.caption"));
@@ -33,8 +34,8 @@ public class Toolbar extends HorizontalLayout {
     private void initcomponents() {
         addComponent(addNode);
         addComponent(removeNode);
-
         addComponent(search);
+        addComponent(projectManagement);
         addComponent(help);
 
         addNode.addListener(new Button.ClickListener() {
@@ -54,9 +55,17 @@ public class Toolbar extends HorizontalLayout {
         search.addListener(new Button.ClickListener() {
             @Override
             public void buttonClick(ClickEvent event) {
-                // noop
+                application.showSearchWindow();
             }
         });
+        
+        projectManagement.addListener(new Button.ClickListener() {
+            @Override
+            public void buttonClick(ClickEvent event) {
+                application.projectManagement();
+            }
+        });
+        
         help.addListener(new Button.ClickListener() {
             @Override
             public void buttonClick(ClickEvent event) {
@@ -66,12 +75,15 @@ public class Toolbar extends HorizontalLayout {
 
         addNode.setIcon(new ThemeResource("icons/32x32/actions/edit_add.png"));
         removeNode.setIcon(new ThemeResource("icons/32x32/actions/editdelete.png"));
-
+        search.setIcon(new ThemeResource("icons/32x32/actions/find.png"));
+        projectManagement.setIcon(new ThemeResource("icons/32x32/apps/system_file_manager.png"));
+        help.setIcon(new ThemeResource("icons/32x32/actions/contents.png"));
+        
         addNode.addStyleName("multiline");
         removeNode.addStyleName("multiline");
-
-        search.setIcon(new ThemeResource("icons/32x32/actions/find.png"));
-        help.setIcon(new ThemeResource("icons/32x32/actions/contents.png"));
+        search.addStyleName("multiline");
+        projectManagement.addStyleName("multiline");
+        help.addStyleName("multiline");
 
         setMargin(true);
         setSpacing(true);

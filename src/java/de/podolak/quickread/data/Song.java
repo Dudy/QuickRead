@@ -1,6 +1,7 @@
 package de.podolak.quickread.data;
 
 import de.podolak.quickread.data.datastore.Document;
+import de.podolak.quickread.data.datastore.DocumentType;
 
 /**
  *
@@ -8,20 +9,31 @@ import de.podolak.quickread.data.datastore.Document;
  */
 public class Song extends Document {
 
-    public String getArtist() {
-        String author = getFirstValueByKey("artist");
-        
-        //TODO: check for null and always (empty is necessary) return non null string? 
-        
-        return author;
+    public static final String KEY_SONG_TITLE  = "title";
+    public static final String KEY_SONG_ARTIST = "artist";
+    
+    public Song() {
+        setDocumentType(DocumentType.SONG);
     }
     
     public String getTitle() {
-        String title = getFirstValueByKey("title");
-        
-        //TODO: check for null and always (empty is necessary) return non null string? 
-        
-        return title;
+        return getFirstValueByKey(KEY_SONG_TITLE);
     }
     
+    public void setTitle(String title) {
+        setData(KEY_SONG_TITLE, title);
+    }
+
+    public String getArtist() {
+        return getFirstValueByKey(KEY_SONG_ARTIST);
+    }
+    
+    public void setArtist(String artist) {
+        setData(KEY_SONG_ARTIST, artist);
+    }
+
+    @Override
+    public String getCaption() {
+        return getArtist() + " - " + getTitle();
+    }
 }

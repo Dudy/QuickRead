@@ -10,15 +10,13 @@ import com.google.appengine.api.datastore.PreparedQuery;
 import com.google.appengine.api.datastore.Query;
 import com.google.appengine.api.datastore.Text;
 import de.podolak.quickread.Utilities;
+import de.podolak.quickread.data.Book;
 import de.podolak.quickread.data.Project;
-import java.io.StringReader;
+import de.podolak.quickread.data.Song;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.logging.Level;
 import java.util.logging.Logger;
-import javax.xml.parsers.DocumentBuilder;
-import javax.xml.parsers.DocumentBuilderFactory;
-import org.xml.sax.InputSource;
 
 /**
  *
@@ -26,10 +24,21 @@ import org.xml.sax.InputSource;
  */
 public class DocumentPersistence {
     
+    public static Project getFirstProject() {
+        //TODO: this is kind of clumsy ...
+        ArrayList<Project> projectList = loadProjectList___new();
+        Project firstProject = projectList.get(0);
+        return firstProject;
+    }
+    
     //TODO: use the current user here, return empty document when no user is logged on, read last document ID from cookie
     //TODO: add metadata
     public static Document getLastDocument() {
         return loadDocument(2L);
+    }
+    
+    public static Document loadDocument(Integer documentId) {
+        return loadDocument(Long.valueOf(documentId));
     }
     
     public static Document loadDocument(Long id) {
@@ -51,19 +60,7 @@ public class DocumentPersistence {
     }
     
     public static Document loadDocumentFromString(String content) {
-        try {
-            DocumentBuilderFactory builderFactory = DocumentBuilderFactory.newInstance();
-            DocumentBuilder builder = builderFactory.newDocumentBuilder();
-            return DocumentHandler.deserialize(builder.parse(new InputSource(new StringReader(content))));
-        } catch (javax.xml.parsers.ParserConfigurationException e) {
-            Logger.getLogger(DocumentPersistence.class.getName()).log(Level.SEVERE, "Fehler: kann keinen Parser erzeugen", e);
-        } catch (org.xml.sax.SAXException e) {
-            Logger.getLogger(DocumentPersistence.class.getName()).log(Level.SEVERE, "Fehler: kann das document nicht parsen", e);
-        } catch (java.io.IOException e) {
-            Logger.getLogger(DocumentPersistence.class.getName()).log(Level.SEVERE, "Fehler: kann das document nicht öffnen", e);
-        }
-        
-        return null;
+        return DocumentHandler.deserialize(content);
     }
     
     public static Document storeDocument(Document document) {
@@ -101,7 +98,7 @@ public class DocumentPersistence {
     
     public static Integer getDefaultVersion() {
         // TODO: think about storing this in metadata in datastore
-        return 2;
+        return 3;
     }
 
     public static ArrayList<Document> loadProjectList() {
@@ -135,7 +132,106 @@ public class DocumentPersistence {
             }
         }
         
+        if (projectList.isEmpty()) {
+            projectList.add(createAndGetInitialProject());
+        }
+        
         return projectList;
+    }
+    
+    private static Project createAndGetInitialProject() {
+        Project returnValue = null;
+        
+        Project project = new Project();
+        project.setId(1L);
+        project.setSerializationVersion(3);
+        project.setCreateDate(new Date());
+        project.setLastModifyDate(new Date());
+        project.setDocumentType(DocumentType.PROJECT);
+        project.setName("project 1");
+        project.addData("documentID", 2);
+        project.addData("documentID", 3);
+        storeDocument(project);
+        returnValue = project;
+        
+        Book book = new Book();
+        book.setId(2L);
+        book.setSerializationVersion(3);
+        book.setCreateDate(new Date());
+        book.setLastModifyDate(new Date());
+        book.setDocumentType(DocumentType.BOOK);
+        book.setAuthor("Dirk Podolak");
+        book.setTitle("the joy of programming");
+        book.addData("introduction", "Dirk Podolak talks about the joy of programming.");
+        book.addData("contents", "Start here to explore why Dirk Podolak thinks it is a joy to write computer programs.");
+        book.addData("index", "lookup table of some important terms");
+        book.addData("contents.chapter 1", "todo: summary of chapter 1");
+        book.addData("contents.chapter 2", "todo: summary of chapter 2");
+        book.addData("contents.chapter 3", "todo: summary of chapter 3");
+        storeDocument(book);
+        
+        book = new Book();
+        book.setId(3L);
+        book.setSerializationVersion(3);
+        book.setCreateDate(new Date());
+        book.setLastModifyDate(new Date());
+        book.setDocumentType(DocumentType.BOOK);
+        book.setAuthor("Dirk Podolak");
+        book.setTitle("the pain of programming");
+        book.addData("introduction", "Dirk Podolak talks about the pain of programming.");
+        book.addData("contents", "Start here to explore why Dirk Podolak thinks it is a pain to write computer programs.");
+        book.addData("index", "lookup table of some important terms");
+        book.addData("contents.chapter 1", "todo: summary of chapter 1");
+        book.addData("contents.chapter 2", "todo: summary of chapter 2");
+        book.addData("contents.chapter 3", "todo: summary of chapter 3");
+        storeDocument(book);
+        
+        project = new Project();
+        project.setId(4L);
+        project.setSerializationVersion(3);
+        project.setCreateDate(new Date());
+        project.setLastModifyDate(new Date());
+        project.setDocumentType(DocumentType.PROJECT);
+        project.setName("project 2");
+        project.addData("documentID", 6);
+        project.addData("documentID", 3);
+        project.addData("documentID", 5);
+        storeDocument(project);
+        
+        Song song = new Song();
+        song.setId(5L);
+        song.setSerializationVersion(3);
+        song.setCreateDate(new Date());
+        song.setLastModifyDate(new Date());
+        song.setDocumentType(DocumentType.SONG);
+        song.setTitle("Phuture Paradise");
+        song.setArtist("Dirk Podolak");
+        song.addData("text", "the future ... is paradise (30 times)");
+        song.addData("music", "three instruments");
+        song.addData("music.percussion", "dumm de dumm ... blizzzzzz (15 times)");
+        song.addData("music.triangle", "dschingggg dschingggg (60 times)");
+        song.addData("music.piano", "pling pling plong plang pling (22 times)");
+        storeDocument(song);
+        
+        book = new Book();
+        book.setId(6L);
+        book.setSerializationVersion(3);
+        book.setCreateDate(new Date());
+        book.setLastModifyDate(new Date());
+        book.setDocumentType(DocumentType.BOOK);
+        book.setAuthor("Dirk Podolak");
+        book.setTitle("Music for the People");
+        book.addData("introduction", "Dirk Podolak talks about how music can reach peoples hearts easier than words.");
+        book.addData("contents", "Start here to explore how Dirk Podolak thinks music can change the future.");
+        book.addData("index", "lookup table of some important terms");
+        book.addData("contents.chapter 1", "todo: summary of chapter 1");
+        book.addData("contents.chapter 2", "todo: summary of chapter 2");
+        book.addData("contents.chapter 3", "todo: summary of chapter 3");
+        book.addData("contents.chapter 4", "todo: summary of chapter 4");
+        book.addData("contents.chapter 5", "todo: summary of chapter 5");
+        storeDocument(book);
+        
+        return returnValue;
     }
     
 }

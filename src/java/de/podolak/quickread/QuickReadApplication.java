@@ -20,18 +20,19 @@ import com.vaadin.ui.Component;
 import com.vaadin.ui.HorizontalSplitPanel;
 import com.vaadin.ui.VerticalLayout;
 import com.vaadin.ui.Window;
-import com.vaadin.ui.Window.Notification;
-import de.podolak.quickread.data.Document;
-import de.podolak.quickread.data.Node;
-import de.podolak.quickread.data.persistence.DocumentPersistence;
+import de.podolak.quickread.data.Project;
+import de.podolak.quickread.data.datastore.Document;
+import de.podolak.quickread.data.datastore.DocumentPersistence;
+import de.podolak.quickread.data.datastore.Node;
 import de.podolak.quickread.ui.HelpWindow;
 import de.podolak.quickread.ui.NavigationTree;
 import de.podolak.quickread.ui.NodeForm;
 import de.podolak.quickread.ui.NodeView;
+import de.podolak.quickread.ui.ProjectManagementWindow;
+import de.podolak.quickread.ui.SearchWindow;
 import de.podolak.quickread.ui.Toolbar;
 import java.util.Arrays;
 import java.util.Collection;
-import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 import java.util.logging.Level;
@@ -58,15 +59,18 @@ public class QuickReadApplication extends Application implements
     private NodeView nodeView = null;
     private HelpWindow helpWindow = null;
     private NodeForm nodeForm = null;
+    private SearchWindow searchWindow = null;
+    
+    private ProjectManagementWindow projectManagementWindow = null;
     
     // data handling
     private HierarchicalContainer dataContainer;
-    private Document document;
+    private Project project;
 
     // <editor-fold defaultstate="collapsed" desc=" application ">
     @Override
     public void init() {
-        initData();
+        initData(DocumentPersistence.getFirstProject());
         
 		// Only add one listener per context as Vaadin calls every listener in
 		// the context for every request.
@@ -97,6 +101,7 @@ public class QuickReadApplication extends Application implements
     // </editor-fold>
 
     // <editor-fold defaultstate="collapsed" desc=" UI ">
+    
     private void buildUI() {
         buildMainLayout();
         setMainComponent(getNodeView());
@@ -124,6 +129,25 @@ public class QuickReadApplication extends Application implements
     private void setMainComponent(Component c) {
         horizontalSplit.setSecondComponent(c);
     }
+    
+    public void projectManagement() {
+        getMainWindow().addWindow(getProjectManagementWindow());
+        getProjectManagementWindow().setSelectedProject(project);
+    }
+    
+    public void closeProjectManagement(Project selectedProject) {
+        getMainWindow().removeWindow(projectManagementWindow);
+        initData(selectedProject);
+        navigationTree.setContainerDataSource(getDataContainer());
+    }
+    
+    private ProjectManagementWindow getProjectManagementWindow() {
+        if (projectManagementWindow == null) {
+            projectManagementWindow = new ProjectManagementWindow(this);
+            projectManagementWindow.center();
+        }
+        return projectManagementWindow;
+    }
 
     private HelpWindow getHelpWindow() {
         if (helpWindow == null) {
@@ -139,9 +163,20 @@ public class QuickReadApplication extends Application implements
         }
         return nodeView;
     }
+    
+    private SearchWindow getSearchWindow() {
+        if (searchWindow == null) {
+            searchWindow = new SearchWindow(this);
+        }
+        return searchWindow;
+    }
 
     public void showHelpWindow() {
         getMainWindow().addWindow(getHelpWindow());
+    }
+    
+    public void showSearchWindow() {
+        getMainWindow().addWindow(getSearchWindow());
     }
     
     public void showMessage(String caption, String description) {
@@ -191,30 +226,39 @@ public class QuickReadApplication extends Application implements
     // </editor-fold>
     
     // <editor-fold defaultstate="collapsed" desc=" data ">
-    private void initData() {
+    @Deprecated
+    public void resetData() {
+//        initData(DocumentPersistence.loadDocument(2L));
+//        navigationTree.setContainerDataSource(getDataContainer());
+//        navigationTree.requestRepaint();
+    }
+    
+    private void initData(Project project) {
         dataContainer = new HierarchicalContainer();
-        createDataContainer(DocumentPersistence.getLastDocument());
+        createDataContainer(project);
     }
     
     public void save() {
-        Document newDocument = DocumentPersistence.storeDocument(new Document(
-                document.getId(),
-                getNode(ROOT_INDEX),
-                document.getCreateDate(),
-                new Date()));
-
-        if (newDocument == null) {
-            showMessage(
-                    Utilities.getI18NText("action.save.error.caption"),
-                    Utilities.getI18NText("action.save.error.description"),
-                    Notification.TYPE_WARNING_MESSAGE);
-        } else {
-            showMessage(
-                    Utilities.getI18NText("action.save.success.caption"),
-                    Utilities.getI18NText("action.save.success.description"));
-            createDataContainer(newDocument);
-            navigationTree.requestRepaint();
-        }
+//        Document newDocument = DocumentPersistence.storeDocument(new Document(
+//                document.getId(),
+//                DocumentPersistence.getDefaultVersion(),
+//                getNode(ROOT_INDEX),
+//                document.getCreateDate(),
+//                new Date(),
+//                document.getDocumentType()));
+//
+//        if (newDocument == null) {
+//            showMessage(
+//                    Utilities.getI18NText("action.save.error.caption"),
+//                    Utilities.getI18NText("action.save.error.description"),
+//                    Notification.TYPE_WARNING_MESSAGE);
+//        } else {
+//            showMessage(
+//                    Utilities.getI18NText("action.save.success.caption"),
+//                    Utilities.getI18NText("action.save.success.description"));
+//            createDataContainer(newDocument);
+//            navigationTree.requestRepaint();
+//        }
     }
 
     // <editor-fold defaultstate="collapsed" desc=" data container handling ">
@@ -241,7 +285,7 @@ public class QuickReadApplication extends Application implements
                 if (lastItemIdObject instanceof Integer) {
                     Integer lastItemId = (Integer) dataContainer.lastItemId();
                     Node node = new Node(Utilities.getI18NText("data.newNode.title"), Utilities.getI18NText("data.newNode.text"));
-                    addItem(node, lastItemId + 1, selectedItemId);
+                    addItem(node, lastItemId + 1, selectedItemId, true);
                     save();
                 } else {
                     Logger.getLogger(QuickReadApplication.class.getName()).log(Level.SEVERE, "last item id in dataContainer is not of type Integer");
@@ -252,6 +296,8 @@ public class QuickReadApplication extends Application implements
         } else {
             Logger.getLogger(QuickReadApplication.class.getName()).log(Level.SEVERE, "selected item id is null");
         }
+        
+        navigationTree.requestRepaint();
     }
 
     public void removeNode() {
@@ -306,8 +352,8 @@ public class QuickReadApplication extends Application implements
         }
     }
 
-    private void createDataContainer(Document document) {
-        this.document = document;
+    private void createDataContainer(Project project) {
+        this.project = project;
 
         // create new container
         dataContainer.removeAllItems();
@@ -315,29 +361,65 @@ public class QuickReadApplication extends Application implements
         dataContainer.addContainerProperty("text", String.class, Utilities.getI18NText("data.newNode.text"));
         dataContainer.addContainerProperty("icon", ThemeResource.class, new ThemeResource("../runo/icons/16/document.png"));
 
-        // add data tree
-        addItem(document.getRoot(), ROOT_INDEX, -1);
-    }
-
-    private int addItem(Node node, int itemId, int parentId) {
-        // add new item
-        Item item;
-        item = dataContainer.addItem(itemId);
-        item.getItemProperty("title").setValue(node.getTitle());
-        item.getItemProperty("text").setValue(node.getText());
-        item.getItemProperty("icon").setValue(new ThemeResource("../runo/icons/16/folder.png"));
-        dataContainer.setChildrenAllowed(itemId, node.getNumberOfChildren() > 0);
-
-        // add parent
-        if (parentId >= 0) {
-            dataContainer.setChildrenAllowed(parentId, true);
-            dataContainer.setParent(itemId, parentId);
+        // add project as root node
+        int projectId = addProject(project, ROOT_INDEX);
+        int newId = projectId + 1;
+        
+        if (project.getDocumentIdList().size() > 0) {
+            for (Document document : project.getDocumentList()) {
+                newId = addDocument(document, newId, projectId);
+            }
         }
+    }
+    
+    private int addProject(Project project, int itemId) {
+        Item item = dataContainer.addItem(itemId);
+        item.getItemProperty("title").setValue(project.getCaption());
+        item.getItemProperty("text").setValue("");
+        item.getItemProperty("icon").setValue(new ThemeResource("../runo/icons/16/folder.png"));
+        dataContainer.setChildrenAllowed(itemId, project.getDocumentIdList().size() > 0);
+        return itemId;
+    }
+    
+    private int addDocument(Document document, int itemId, int parentId) {
+        Item item = dataContainer.addItem(itemId);
+        item.getItemProperty("title").setValue(document.getCaption());
+        item.getItemProperty("text").setValue("");
+        item.getItemProperty("icon").setValue(new ThemeResource("../runo/icons/16/folder.png"));
+        dataContainer.setChildrenAllowed(itemId, document.getDataNode().numberOfChildren() > 0);
+        dataContainer.setParent(itemId, parentId);
+        
+        itemId = addItem(document.getDataNode(), itemId + 1, itemId, false);
+        
+        return itemId;
+    }
+    
+    private int addItem(Node node, int itemId, int parentId, boolean rootVisible) {
+        int newId = itemId;
+        
+        if (rootVisible) {
+            // add new item
+            Item item;
+            item = dataContainer.addItem(itemId);
+            item.getItemProperty("title").setValue(node.getKey());
+            item.getItemProperty("text").setValue(node.getValue());
+            item.getItemProperty("icon").setValue(new ThemeResource("../runo/icons/16/folder.png"));
+            dataContainer.setChildrenAllowed(itemId, node.numberOfChildren() > 0);
 
+            // add parent
+            if (parentId >= 0) {
+                dataContainer.setChildrenAllowed(parentId, true);
+                dataContainer.setParent(itemId, parentId);
+            }
+            
+            newId++;
+        } else {
+            itemId = parentId;
+        }
+        
         // add children
-        int newId = itemId + 1;
         for (Node child : node.getChildren()) {
-            newId = addItem(child, newId, itemId);
+            newId = addItem(child, newId, itemId, true);
         }
 
         // return last valid id

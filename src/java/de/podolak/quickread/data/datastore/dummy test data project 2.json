@@ -1,0 +1,172 @@
+{
+    "Project": {
+        "Node": {
+            "key": "caption",
+            "value": "Projekt 2",
+            "Node": {
+                "key": "data",
+                "value": "",
+                "Node": {
+                    "key": "documentID",
+                    "value": "6"
+                },
+                "Node": {
+                    "key": "documentID",
+                    "value": "3"
+                },
+                "Node": {
+                    "key": "documentID",
+                    "value": "5"
+                }
+            },
+            "Node": {
+                "key": "id",
+                "value": "4"
+            },
+            "Node": {
+                "key": "serializationVersion",
+                "value": "2"
+            },
+            "Node": {
+                "key": "createDate",
+                "value": "1000000200"
+            },
+            "Node": {
+                "key": "lastModifyDate",
+                "value": "1000000300"
+            },
+            "Node": {
+                "key": "documentType",
+                "value": "PROJECT"
+            }
+        }
+    },
+    "Song": {
+        "Node": {
+            "key": "caption",
+            "value": "Dirk Podolak - Phuture Paradise",
+            "Node": {
+                "key": "data",
+                "value": "",
+                "Node": {
+                    "key": "text",
+                    "value": "the future ... is paradise (30 times)"
+                },
+                "Node": {
+                    "key": "music",
+                    "value": "three instruments",
+                    "Node": {
+                        "key": "percussion",
+                        "value": "dumm de dumm ... blizzzzzz (15 times)"
+                    },
+                    "Node": {
+                        "key": "triangle",
+                        "value": "dschingggg dschingggg (60 times)"
+                    },
+                    "Node": {
+                        "key": "piano",
+                        "value": "pling pling plong plang pling (22 times)"
+                    }
+                }
+            },
+            "Node": {
+                "key": "id",
+                "value": "5L"
+            },
+            "Node": {
+                "key": "serializationVersion",
+                "value": "2"
+            },
+            "Node": {
+                "key": "createDate",
+                "value": "1000000201"
+            },
+            "Node": {
+                "key": "lastModifyDate",
+                "value": "1000000202"
+            },
+            "Node": {
+                "key": "documentType",
+                "value": "SONG"
+            },
+            "Node": {
+                "key": "artist",
+                "value": "Dirk Podolak"
+            },
+            "Node": {
+                "key": "title",
+                "value": "Phuture Paradise"
+            }
+        }
+    },
+    "Book": {
+        "Node": {
+            "key": "caption",
+            "value": "Dirk Podolak - Music for the People",
+            "Node": {
+                "key": "data",
+                "value": "",
+                "Node": {
+                    "key": "introduction",
+                    "value": "Dirk Podolak talks about how music can reach peoples hearts easier than words."
+                },
+                "Node": {
+                    "key": "contents",
+                    "value": "Start here to explore how Dirk Podolak thinks music can change the future.",
+                    "Node": {
+                        "key": "chapter 1",
+                        "value": "todo: summary of chapter 1"
+                    },
+                    "Node": {
+                        "key": "chapter 2",
+                        "value": "todo: summary of chapter 2"
+                    },
+                    "Node": {
+                        "key": "chapter 3",
+                        "value": "todo: summary of chapter 3"
+                    },
+                    "Node": {
+                        "key": "chapter 4",
+                        "value": "todo: summary of chapter 4"
+                    },
+                    "Node": {
+                        "key": "chapter 5",
+                        "value": "todo: summary of chapter 5"
+                    }
+                },
+                "Node": {
+                    "key": "index",
+                    "value": "lookup table of some important terms"
+                }
+            },
+            "Node": {
+                "key": "id",
+                "value": "6L"
+            },
+            "Node": {
+                "key": "serializationVersion",
+                "value": "2"
+            },
+            "Node": {
+                "key": "createDate",
+                "value": "1000000203"
+            },
+            "Node": {
+                "key": "lastModifyDate",
+                "value": "1000000204"
+            },
+            "Node": {
+                "key": "documentType",
+                "value": "BOOK"
+            },
+            "Node": {
+                "key": "author",
+                "value": "Dirk Podolak"
+            },
+            "Node": {
+                "key": "title",
+                "value": "music for the people"
+            }
+        }
+    }
+}
