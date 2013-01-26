@@ -77,4 +77,13 @@ public class Project extends Document {
     public String getCaption() {
         return getName();
     }
+    
+    @Override
+    public List<String> getAttributeStringList() {
+        List<String> attributeStringList = super.getAttributeStringList();
+        
+        attributeStringList.add("name");
+        
+        return attributeStringList;
+    }
 }

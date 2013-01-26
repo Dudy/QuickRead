@@ -2,6 +2,8 @@ package de.podolak.quickread.data.datastore;
 
 import static de.podolak.quickread.data.datastore.Document.Metadata.*;
 import java.io.Serializable;
+import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Date;
 import java.util.List;
 import java.util.logging.Level;
@@ -17,9 +19,16 @@ public class Document implements Serializable {
     
     public static final String ROOT_KEY_PREFIX     = "root";
     public static final String DATA_KEY_PREFIX     = "data";
-    public static final String METADATA_KEY_PREFIX = ROOT_KEY_PREFIX + ".";
+    public static final String METADATA_KEY_PREFIX = "";
+    
+    private static final List<String> attributeStringList;
     
     private Node root;
+    
+    static {
+        attributeStringList = new ArrayList<String>();
+        attributeStringList.add("documentType");
+    }
 
     public Document() {
     }
@@ -56,9 +65,10 @@ public class Document implements Serializable {
 
     public final void init(Long id, Integer serializationVersion, Node root, Date createDate, Date lastModifyDate,
             DocumentType documentType) {
+        // setRoot must be the first as all data is stored therein
+        setRoot(root);
         setId(id);
         setSerializationVersion(serializationVersion);
-        setRoot(root);
         setCreateDate(createDate);
         setLastModifyDate(lastModifyDate);
         setDocumentType(documentType);
@@ -141,7 +151,7 @@ public class Document implements Serializable {
     public String getFirstValueByKey(String key) {
         List<String> valueList = getValueListByKey(key);
 
-        if (valueList == null) {
+        if (valueList == null || valueList.isEmpty()) {
             return null;
         } else {
             return valueList.get(0);
@@ -155,7 +165,7 @@ public class Document implements Serializable {
     public String getFirstValueByKeyPath(String keyPath) {
         List<String> valueList = getValueListByKeyPath(keyPath);
 
-        if (valueList == null) {
+        if (valueList == null || valueList.isEmpty()) {
             return null;
         } else {
             return valueList.get(0);
@@ -171,6 +181,18 @@ public class Document implements Serializable {
         }
         
         return node;
+    }
+    
+    public String getFirstData(String keyPath) {
+        String value = null;
+        Node dataNode = getDataNode();
+        List<Node> nodeListByKeyPath = dataNode.getChildNodeListByKeyPath(keyPath);
+        
+        if (nodeListByKeyPath != null && !nodeListByKeyPath.isEmpty()) {
+            value = nodeListByKeyPath.get(0).getValue();
+        }
+        
+        return value;
     }
     
     /**
@@ -197,16 +219,16 @@ public class Document implements Serializable {
      * @param value
      */
     public void setData(String keyPath, Object value) {
-        Node node = getDataNode();
-        List<Node> nodeList = node.getNodeListByKeyPath(keyPath);
+        Node dataNode = getDataNode();
+        List<Node> nodeList = dataNode.getChildNodeListByKeyPath(keyPath);
 
         if (nodeList == null || nodeList.size() != 1) {
-            node = node.createNodeByKeyPath(keyPath);
+            dataNode = dataNode.createNodeByKeyPath(keyPath);
         } else {
-            node = nodeList.get(0);
+            dataNode = nodeList.get(0);
         }
 
-        node.setValue(value.toString());
+        dataNode.setValue(value.toString());
     }
 
     public <T> T getMetadata(Metadata metadata) {
@@ -264,7 +286,11 @@ public class Document implements Serializable {
     public String getCaption() {
         return "document with ID " + getId();
     }
-
+    
+    public List<String> getAttributeStringList() {
+        return new ArrayList<String>(Arrays.asList(new String[] { "documentType" }));
+    }
+    
     public enum Metadata {
 
         ID("id", Long.class),
@@ -342,21 +368,25 @@ public class Document implements Serializable {
                 document.getRoot().addChild(metadataNode);
             }
             
-            if (type == String.class) {
-                metadataNode.setValue(value.toString());
-            } else if (type == Integer.class) {
-                metadataNode.setValue(value.toString());
-            } else if (type == Long.class) {
-                metadataNode.setValue(value.toString());
-            } else if (type == Boolean.class) {
-                metadataNode.setValue(value.toString());
-            } else if (type == Date.class) {
-                metadataNode.setValue(Long.toString(((Date)value).getTime()));
-            } else if (type == DocumentType.class) {
-                metadataNode.setValue(((DocumentType)value).name());
+            if (value == null) {
+                metadataNode.setValue(null);
             } else {
-                Logger.getLogger(Metadata.class.getName()).log(Level.INFO, "{0} with unknown class '{1}' of value '{2}' omitted",
-                        new Object[]{identifier, type, value});
+                if (type == String.class) {
+                    metadataNode.setValue(value.toString());
+                } else if (type == Integer.class) {
+                    metadataNode.setValue(value.toString());
+                } else if (type == Long.class) {
+                    metadataNode.setValue(value.toString());
+                } else if (type == Boolean.class) {
+                    metadataNode.setValue(value.toString());
+                } else if (type == Date.class) {
+                    metadataNode.setValue(Long.toString(((Date)value).getTime()));
+                } else if (type == DocumentType.class) {
+                    metadataNode.setValue(((DocumentType)value).name());
+                } else {
+                    Logger.getLogger(Metadata.class.getName()).log(Level.INFO, "{0} with unknown class '{1}' of value '{2}' omitted",
+                            new Object[]{identifier, type, value});
+                }
             }
         }
     }

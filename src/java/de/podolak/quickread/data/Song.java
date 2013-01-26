@@ -2,6 +2,9 @@ package de.podolak.quickread.data;
 
 import de.podolak.quickread.data.datastore.Document;
 import de.podolak.quickread.data.datastore.DocumentType;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.List;
 
 /**
  *
@@ -35,5 +38,15 @@ public class Song extends Document {
     @Override
     public String getCaption() {
         return getArtist() + " - " + getTitle();
+    }
+    
+    @Override
+    public List<String> getAttributeStringList() {
+        List<String> attributeStringList = super.getAttributeStringList();
+        
+        attributeStringList.add("title");
+        attributeStringList.add("artist");
+        
+        return attributeStringList;
     }
 }

@@ -23,6 +23,7 @@ import com.vaadin.ui.Window;
 import de.podolak.quickread.data.Project;
 import de.podolak.quickread.data.datastore.Document;
 import de.podolak.quickread.data.datastore.DocumentPersistence;
+import de.podolak.quickread.data.datastore.DocumentType;
 import de.podolak.quickread.data.datastore.Node;
 import de.podolak.quickread.ui.HelpWindow;
 import de.podolak.quickread.ui.NavigationTree;
@@ -31,6 +32,7 @@ import de.podolak.quickread.ui.NodeView;
 import de.podolak.quickread.ui.ProjectManagementWindow;
 import de.podolak.quickread.ui.SearchWindow;
 import de.podolak.quickread.ui.Toolbar;
+import de.podolak.quickread.ui.wizard.NewDocumentWindow;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.HashMap;
@@ -60,6 +62,8 @@ public class QuickReadApplication extends Application implements
     private HelpWindow helpWindow = null;
     private NodeForm nodeForm = null;
     private SearchWindow searchWindow = null;
+    //private NewDocumentWindow newDocumentWindow = null;
+    private NewDocumentWindow newDocumentWindow = null;
     
     private ProjectManagementWindow projectManagementWindow = null;
     
@@ -141,6 +145,16 @@ public class QuickReadApplication extends Application implements
         navigationTree.setContainerDataSource(getDataContainer());
     }
     
+    public void closeNewDocumentWindow(Document newDocument) {
+        getMainWindow().removeWindow(newDocumentWindow);
+        
+        if (newDocument != null) {
+            project.addDocument(newDocument);
+            initData(project);
+            navigationTree.setContainerDataSource(getDataContainer());
+        }
+    }
+    
     private ProjectManagementWindow getProjectManagementWindow() {
         if (projectManagementWindow == null) {
             projectManagementWindow = new ProjectManagementWindow(this);
@@ -170,6 +184,16 @@ public class QuickReadApplication extends Application implements
         }
         return searchWindow;
     }
+    
+    //private NewDocumentWindow getNewDocumentWindow() {
+    private NewDocumentWindow getNewDocumentWindow() {
+        if (newDocumentWindow == null) {
+            //newDocumentWindow = new NewDocumentWindow(this);
+            newDocumentWindow = new NewDocumentWindow(this);
+            newDocumentWindow.center();
+        }
+        return newDocumentWindow;
+    }
 
     public void showHelpWindow() {
         getMainWindow().addWindow(getHelpWindow());
@@ -177,6 +201,10 @@ public class QuickReadApplication extends Application implements
     
     public void showSearchWindow() {
         getMainWindow().addWindow(getSearchWindow());
+    }
+    
+    public void showNewDocumentWindow() {
+        getMainWindow().addWindow(getNewDocumentWindow());
     }
     
     public void showMessage(String caption, String description) {
@@ -280,13 +308,33 @@ public class QuickReadApplication extends Application implements
         if (selectedItemIdObject != null) {
             if (selectedItemIdObject instanceof Integer) {
                 Integer selectedItemId = (Integer) selectedItemIdObject;
+                Item selectedItem = dataContainer.getItem(selectedItemId);
+                DocumentType selectedDocumentType = (DocumentType) selectedItem.getItemProperty("documenttype").getValue();
                 Object lastItemIdObject = dataContainer.lastItemId();
 
                 if (lastItemIdObject instanceof Integer) {
                     Integer lastItemId = (Integer) dataContainer.lastItemId();
-                    Node node = new Node(Utilities.getI18NText("data.newNode.title"), Utilities.getI18NText("data.newNode.text"));
-                    addItem(node, lastItemId + 1, selectedItemId, true);
-                    save();
+                    Node node = null;
+                    
+                    switch (selectedDocumentType) {
+                        case PROJECT:
+                            //TODO: raise "new document" wizard
+                            showNewDocumentWindow();
+                            break;
+                        
+                        // for now all the other ones just get new nodes
+                        case BOOK:
+                        case SONG:
+                        case COMMON:
+                        default:
+                            node = new Node(Utilities.getI18NText("data.newNode.title"), Utilities.getI18NText("data.newNode.text"));
+                            break;
+                    }
+                    
+                    if (node != null) {
+                        addItem(node, lastItemId + 1, selectedItemId, true);
+                        save();
+                    }
                 } else {
                     Logger.getLogger(QuickReadApplication.class.getName()).log(Level.SEVERE, "last item id in dataContainer is not of type Integer");
                 }
@@ -360,6 +408,7 @@ public class QuickReadApplication extends Application implements
         dataContainer.addContainerProperty("title", String.class, Utilities.getI18NText("data.newNode.title"));
         dataContainer.addContainerProperty("text", String.class, Utilities.getI18NText("data.newNode.text"));
         dataContainer.addContainerProperty("icon", ThemeResource.class, new ThemeResource("../runo/icons/16/document.png"));
+        dataContainer.addContainerProperty("documenttype", DocumentType.class, null);
 
         // add project as root node
         int projectId = addProject(project, ROOT_INDEX);
@@ -377,6 +426,7 @@ public class QuickReadApplication extends Application implements
         item.getItemProperty("title").setValue(project.getCaption());
         item.getItemProperty("text").setValue("");
         item.getItemProperty("icon").setValue(new ThemeResource("../runo/icons/16/folder.png"));
+        item.getItemProperty("documenttype").setValue(DocumentType.PROJECT);
         dataContainer.setChildrenAllowed(itemId, project.getDocumentIdList().size() > 0);
         return itemId;
     }
@@ -386,6 +436,7 @@ public class QuickReadApplication extends Application implements
         item.getItemProperty("title").setValue(document.getCaption());
         item.getItemProperty("text").setValue("");
         item.getItemProperty("icon").setValue(new ThemeResource("../runo/icons/16/folder.png"));
+        item.getItemProperty("documenttype").setValue(DocumentType.COMMON);
         dataContainer.setChildrenAllowed(itemId, document.getDataNode().numberOfChildren() > 0);
         dataContainer.setParent(itemId, parentId);
         
