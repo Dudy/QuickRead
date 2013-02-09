@@ -86,6 +86,20 @@ public class Document implements Serializable {
         this.root = root;
     }
     
+    public void setRootPreserveMetadata(Node root) {
+        String[] metadataValues = new String[Metadata.values().length];
+        
+        for (int i = 0; i < Metadata.values().length; i++) {
+            metadataValues[i] = getMetadata(Metadata.values()[i]);
+        }
+        
+        this.root = root;
+        
+        for (int i = 0; i < Metadata.values().length; i++) {
+            setMetadata(Metadata.values()[i], metadataValues[i]);
+        }
+    }
+    
     public Long getId() {
         return getMetadata(ID);
     }
@@ -119,7 +133,13 @@ public class Document implements Serializable {
     }
 
     public DocumentType getDocumentType() {
-        return getMetadata(DOCUMENT_TYPE);
+        DocumentType documentType = getMetadata(DOCUMENT_TYPE);
+        
+        if (documentType == null) {
+            documentType = DocumentType.COMMON;
+        }
+        
+        return documentType;
     }
 
     public void setDocumentType(DocumentType documentType) {

@@ -22,7 +22,8 @@ import java.util.ArrayList;
 import java.util.Date;
 
 @SuppressWarnings("serial")
-public class ProjectManagementWindow extends Window {
+public class ProjectManagementWindow extends Window implements Property.ValueChangeListener, ItemClickEvent.ItemClickListener,
+        Container.ItemSetChangeListener, Container.PropertySetChangeListener {
 
     private QuickReadApplication app;
     private HierarchicalContainer dataContainer;
@@ -31,25 +32,19 @@ public class ProjectManagementWindow extends Window {
     public ProjectManagementWindow(final QuickReadApplication app) {
         this.app = app;
 
-        setCaption("Projekte verwalten");
-        
+        setCaption(Utilities.getI18NText("projectManagement.caption"));
+
         VerticalLayout layout = new VerticalLayout();
         layout.setSpacing(true);
-        
+
         //initProjectTree();
         initProjectTree___new();
         addComponent(projectTree);
-        
-        Button close = new Button("Close", new Button.ClickListener() {
-            @Override
-            public void buttonClick(Button.ClickEvent event) {
-                app.closeProjectManagement(getSelectedProject());
-            }
-        });
-        addComponent(close);
-        
-        Button button = new Button("new project");
-        button.addListener(new Button.ClickListener() {
+
+
+
+        Button newProject = new Button(Utilities.getI18NText("action.newProject"));
+        newProject.addListener(new Button.ClickListener() {
             @Override
             public void buttonClick(Button.ClickEvent event) {
                 Project newProject = new Project();
@@ -61,55 +56,59 @@ public class ProjectManagementWindow extends Window {
                 projectTree.select(newProject);
             }
         });
-        addComponent(button);
-        
-//        Button button = new Button("create document for project 2 with ID 4");
-//        button.addListener(new Button.ClickListener() {
-//            @Override
-//            public void buttonClick(Button.ClickEvent event) {
-//                DocumentPersistence.storeDocument(new Document(4L, 1, new Node("unbenanntes Buch"), new Date(), new Date(), DocumentType.BOOK));
-//            }
-//        });
-//        addComponent(button);
-        
+        addComponent(newProject);
+
+        Button show = new Button(Utilities.getI18NText("action.show"), new Button.ClickListener() {
+            @Override
+            public void buttonClick(Button.ClickEvent event) {
+                app.closeProjectManagement(getSelectedProject());
+            }
+        });
+        addComponent(show);
+
+        Button cancel = new Button(Utilities.getI18NText("action.cancel"), new Button.ClickListener() {
+            @Override
+            public void buttonClick(Button.ClickEvent event) {
+                app.cancelProjectManagement();
+            }
+        });
+        addComponent(cancel);
     }
 
-    private class TreeActionHandler implements Property.ValueChangeListener, ItemClickEvent.ItemClickListener,
-        Container.ItemSetChangeListener, Container.PropertySetChangeListener {
-
-        @Override
-        public void valueChange(ValueChangeEvent event) {
-//            throw new UnsupportedOperationException("Not supported yet.");
-            System.out.println("valueChange");
-        }
-
-        @Override
-        public void itemClick(ItemClickEvent event) {
-//            throw new UnsupportedOperationException("Not supported yet.");
-            System.out.println("itemClick");
-        }
-
-        @Override
-        public void containerItemSetChange(ItemSetChangeEvent event) {
-//            throw new UnsupportedOperationException("Not supported yet.");
-            System.out.println("containerItemSetChange");
-        }
-
-        @Override
-        public void containerPropertySetChange(PropertySetChangeEvent event) {
-            System.out.println("containerPropertySetChange");
-        }
-        
-    }
-
+//    private class TreeActionHandler implements Property.ValueChangeListener, ItemClickEvent.ItemClickListener,
+//            Container.ItemSetChangeListener, Container.PropertySetChangeListener {
+//
+//        @Override
+//        public void valueChange(ValueChangeEvent event) {
+////            throw new UnsupportedOperationException("Not supported yet.");
+//            System.out.println("valueChange");
+//        }
+//
+//        @Override
+//        public void itemClick(ItemClickEvent event) {
+////            throw new UnsupportedOperationException("Not supported yet.");
+//            System.out.println("itemClick");
+//        }
+//
+//        @Override
+//        public void containerItemSetChange(ItemSetChangeEvent event) {
+////            throw new UnsupportedOperationException("Not supported yet.");
+//            System.out.println("containerItemSetChange");
+//        }
+//
+//        @Override
+//        public void containerPropertySetChange(PropertySetChangeEvent event) {
+//            System.out.println("containerPropertySetChange");
+//        }
+//    }
     public void setSelectedProject(Project project) {
         projectTree.select(project);
     }
-    
+
     public Project getSelectedProject() {
         return (Project) dataContainer.getItem(projectTree.getValue()).getItemProperty("project").getValue();
     }
-    
+
     private void initProjectTree() {
         // fetch data
         ArrayList<Document> projectList = DocumentPersistence.loadProjectList();
@@ -117,10 +116,10 @@ public class ProjectManagementWindow extends Window {
         // create new container
         dataContainer = new HierarchicalContainer();
         dataContainer.addContainerProperty("title", String.class, Utilities.getI18NText("data.newNode.title"));
-        
+
         int itemId = 0;
         Item item;
-        
+
         // TODO: use the documents as subnodes
         // TODO: add context menu to make a document the "main document" of a project, that is the document
         //       that is shown in the main view
@@ -131,7 +130,7 @@ public class ProjectManagementWindow extends Window {
             itemId++;
         }
         projectTree = new Tree("projects", dataContainer);
-        
+
         projectTree.setItemCaptionPropertyId("title");
         projectTree.setItemCaptionMode(AbstractSelect.ITEM_CAPTION_MODE_PROPERTY);
 
@@ -140,14 +139,19 @@ public class ProjectManagementWindow extends Window {
         projectTree.setMultiSelect(false);
         projectTree.setNullSelectionAllowed(false);
 
-        TreeActionHandler treeActionHandler = new TreeActionHandler();
+//        TreeActionHandler treeActionHandler = new TreeActionHandler();
+//
+//        projectTree.addListener((ItemClickEvent.ItemClickListener) treeActionHandler);
+//        projectTree.addListener((Property.ValueChangeListener) treeActionHandler);
+//        projectTree.addListener((Container.ItemSetChangeListener) treeActionHandler);
+//        projectTree.addListener((Container.PropertySetChangeListener) treeActionHandler);
         
-        projectTree.addListener((ItemClickEvent.ItemClickListener) treeActionHandler);
-        projectTree.addListener((Property.ValueChangeListener) treeActionHandler);
-        projectTree.addListener((Container.ItemSetChangeListener) treeActionHandler);
-        projectTree.addListener((Container.PropertySetChangeListener) treeActionHandler);
+        projectTree.addListener((ItemClickEvent.ItemClickListener) this);
+        projectTree.addListener((Property.ValueChangeListener) this);
+        projectTree.addListener((Container.ItemSetChangeListener) this);
+        projectTree.addListener((Container.PropertySetChangeListener) this);
     }
-    
+
     private void initProjectTree___new() {
         // fetch data
         ArrayList<Project> projectList = DocumentPersistence.loadProjectList___new();
@@ -156,10 +160,10 @@ public class ProjectManagementWindow extends Window {
         dataContainer = new HierarchicalContainer();
         dataContainer.addContainerProperty("title", String.class, Utilities.getI18NText("data.newNode.title"));
         dataContainer.addContainerProperty("project", Project.class, null);
-        
+
         int itemId = 0;
         Item item;
-        
+
         // TODO: use the documents as subnodes
         // TODO: add context menu to make a document the "main document" of a project, that is the document
         //       that is shown in the main view (update: not necessary when displaying all documents)
@@ -171,7 +175,7 @@ public class ProjectManagementWindow extends Window {
             itemId++;
         }
         projectTree = new Tree("projects", dataContainer);
-        
+
         projectTree.setItemCaptionPropertyId("title");
         projectTree.setItemCaptionMode(AbstractSelect.ITEM_CAPTION_MODE_PROPERTY);
 
@@ -180,11 +184,32 @@ public class ProjectManagementWindow extends Window {
         projectTree.setMultiSelect(false);
         projectTree.setNullSelectionAllowed(false);
 
-        TreeActionHandler treeActionHandler = new TreeActionHandler();
-        
-        projectTree.addListener((ItemClickEvent.ItemClickListener) treeActionHandler);
-        projectTree.addListener((Property.ValueChangeListener) treeActionHandler);
-        projectTree.addListener((Container.ItemSetChangeListener) treeActionHandler);
-        projectTree.addListener((Container.PropertySetChangeListener) treeActionHandler);
+        projectTree.addListener((ItemClickEvent.ItemClickListener) this);
+        projectTree.addListener((Property.ValueChangeListener) this);
+        projectTree.addListener((Container.ItemSetChangeListener) this);
+        projectTree.addListener((Container.PropertySetChangeListener) this);
+    }
+
+    @Override
+    public void valueChange(ValueChangeEvent event) {
+//            throw new UnsupportedOperationException("Not supported yet.");
+        System.out.println("valueChange");
+    }
+
+    @Override
+    public void itemClick(ItemClickEvent event) {
+//            throw new UnsupportedOperationException("Not supported yet.");
+        System.out.println("itemClick");
+    }
+
+    @Override
+    public void containerItemSetChange(ItemSetChangeEvent event) {
+//            throw new UnsupportedOperationException("Not supported yet.");
+        System.out.println("containerItemSetChange");
+    }
+
+    @Override
+    public void containerPropertySetChange(PropertySetChangeEvent event) {
+        System.out.println("containerPropertySetChange");
     }
 }

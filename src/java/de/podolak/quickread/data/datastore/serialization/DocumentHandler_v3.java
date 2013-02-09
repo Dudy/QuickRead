@@ -32,7 +32,7 @@ public class DocumentHandler_v3 {
         return document;
     }
     
-    private  static Node deserializeNode(String content) {
+    private static Node deserializeNode(String content) {
         Node node = null;
 
         try {

@@ -20,6 +20,7 @@ import com.vaadin.ui.Component;
 import com.vaadin.ui.HorizontalSplitPanel;
 import com.vaadin.ui.VerticalLayout;
 import com.vaadin.ui.Window;
+import com.vaadin.ui.Window.Notification;
 import de.podolak.quickread.data.Project;
 import de.podolak.quickread.data.datastore.Document;
 import de.podolak.quickread.data.datastore.DocumentPersistence;
@@ -35,6 +36,7 @@ import de.podolak.quickread.ui.Toolbar;
 import de.podolak.quickread.ui.wizard.NewDocumentWindow;
 import java.util.Arrays;
 import java.util.Collection;
+import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 import java.util.logging.Level;
@@ -62,7 +64,7 @@ public class QuickReadApplication extends Application implements
     private HelpWindow helpWindow = null;
     private NodeForm nodeForm = null;
     private SearchWindow searchWindow = null;
-    //private NewDocumentWindow newDocumentWindow = null;
+
     private NewDocumentWindow newDocumentWindow = null;
     
     private ProjectManagementWindow projectManagementWindow = null;
@@ -139,6 +141,10 @@ public class QuickReadApplication extends Application implements
         getProjectManagementWindow().setSelectedProject(project);
     }
     
+    public void cancelProjectManagement() {
+        getMainWindow().removeWindow(projectManagementWindow);
+    }
+    
     public void closeProjectManagement(Project selectedProject) {
         getMainWindow().removeWindow(projectManagementWindow);
         initData(selectedProject);
@@ -159,6 +165,7 @@ public class QuickReadApplication extends Application implements
         if (projectManagementWindow == null) {
             projectManagementWindow = new ProjectManagementWindow(this);
             projectManagementWindow.center();
+            
         }
         return projectManagementWindow;
     }
@@ -185,12 +192,14 @@ public class QuickReadApplication extends Application implements
         return searchWindow;
     }
     
-    //private NewDocumentWindow getNewDocumentWindow() {
     private NewDocumentWindow getNewDocumentWindow() {
         if (newDocumentWindow == null) {
-            //newDocumentWindow = new NewDocumentWindow(this);
             newDocumentWindow = new NewDocumentWindow(this);
             newDocumentWindow.center();
+            
+//            if (dataContainer != null) {
+//                dataContainer.addListener(newDocumentWindow);
+//            }
         }
         return newDocumentWindow;
     }
@@ -268,12 +277,12 @@ public class QuickReadApplication extends Application implements
     
     public void save() {
 //        Document newDocument = DocumentPersistence.storeDocument(new Document(
-//                document.getId(),
+//                project.getId(),
 //                DocumentPersistence.getDefaultVersion(),
 //                getNode(ROOT_INDEX),
-//                document.getCreateDate(),
+//                project.getCreateDate(),
 //                new Date(),
-//                document.getDocumentType()));
+//                project.getDocumentType()));
 //
 //        if (newDocument == null) {
 //            showMessage(
@@ -287,6 +296,48 @@ public class QuickReadApplication extends Application implements
 //            createDataContainer(newDocument);
 //            navigationTree.requestRepaint();
 //        }
+        
+
+//        // always set root node first !!!
+//        Project newProject = new Project();
+//        newProject.setRoot(getNode(ROOT_INDEX));
+//        newProject.setDocumentType(project.getDocumentType());
+//        newProject.setId(project.getId());
+//        newProject.setSerializationVersion(DocumentPersistence.getDefaultVersion());
+//        newProject.setCreateDate(project.getCreateDate());
+//        newProject.setLastModifyDate(new Date());
+//        
+//        project = DocumentPersistence.storeDocument(newProject);
+//
+//        if (project == null) {
+//            showMessage(
+//                    Utilities.getI18NText("action.save.error.caption"),
+//                    Utilities.getI18NText("action.save.error.description"),
+//                    Notification.TYPE_WARNING_MESSAGE);
+//        } else {
+//            showMessage(
+//                    Utilities.getI18NText("action.save.success.caption"),
+//                    Utilities.getI18NText("action.save.success.description"));
+//            createDataContainer(project);
+//            navigationTree.setContainerDataSource(getDataContainer());
+//        }
+        
+        
+        
+        project = DocumentPersistence.storeDocument(project);
+
+        if (project == null) {
+            showMessage(
+                    Utilities.getI18NText("action.save.error.caption"),
+                    Utilities.getI18NText("action.save.error.description"),
+                    Notification.TYPE_WARNING_MESSAGE);
+        } else {
+            showMessage(
+                    Utilities.getI18NText("action.save.success.caption"),
+                    Utilities.getI18NText("action.save.success.description"));
+            createDataContainer(project);
+            navigationTree.requestRepaint();
+        }
     }
 
     // <editor-fold defaultstate="collapsed" desc=" data container handling ">
@@ -318,7 +369,6 @@ public class QuickReadApplication extends Application implements
                     
                     switch (selectedDocumentType) {
                         case PROJECT:
-                            //TODO: raise "new document" wizard
                             showNewDocumentWindow();
                             break;
                         
@@ -328,6 +378,7 @@ public class QuickReadApplication extends Application implements
                         case COMMON:
                         default:
                             node = new Node(Utilities.getI18NText("data.newNode.title"), Utilities.getI18NText("data.newNode.text"));
+                            ((Node)selectedItem.getItemProperty("node").getValue()).addChild(node);
                             break;
                     }
                     
@@ -371,6 +422,12 @@ public class QuickReadApplication extends Application implements
                         public void onClose(ConfirmDialog dialog) {
                             if (dialog.isConfirmed()) {
                                 Object parentItemIdObject = dataContainer.getParent(selectedItemIdObject);
+                                Item selectedItem = dataContainer.getItem(selectedItemIdObject);
+                                Node selectedNode = (Node)selectedItem.getItemProperty("node").getValue();
+                                Item parentItem = dataContainer.getItem(parentItemIdObject);
+                                Node parentNode = (Node)parentItem.getItemProperty("node").getValue();
+                                parentNode.removeChild(selectedNode);
+                                
                                 //TODO: is there a better way to get the children in order?
                                 List<Object> children = Arrays.asList(dataContainer.getChildren(parentItemIdObject).toArray());
 
@@ -409,6 +466,7 @@ public class QuickReadApplication extends Application implements
         dataContainer.addContainerProperty("text", String.class, Utilities.getI18NText("data.newNode.text"));
         dataContainer.addContainerProperty("icon", ThemeResource.class, new ThemeResource("../runo/icons/16/document.png"));
         dataContainer.addContainerProperty("documenttype", DocumentType.class, null);
+        dataContainer.addContainerProperty("node", Node.class, null);
 
         // add project as root node
         int projectId = addProject(project, ROOT_INDEX);
@@ -427,6 +485,7 @@ public class QuickReadApplication extends Application implements
         item.getItemProperty("text").setValue("");
         item.getItemProperty("icon").setValue(new ThemeResource("../runo/icons/16/folder.png"));
         item.getItemProperty("documenttype").setValue(DocumentType.PROJECT);
+        item.getItemProperty("node").setValue(project);
         dataContainer.setChildrenAllowed(itemId, project.getDocumentIdList().size() > 0);
         return itemId;
     }
@@ -437,6 +496,7 @@ public class QuickReadApplication extends Application implements
         item.getItemProperty("text").setValue("");
         item.getItemProperty("icon").setValue(new ThemeResource("../runo/icons/16/folder.png"));
         item.getItemProperty("documenttype").setValue(DocumentType.COMMON);
+        item.getItemProperty("node").setValue(document);
         dataContainer.setChildrenAllowed(itemId, document.getDataNode().numberOfChildren() > 0);
         dataContainer.setParent(itemId, parentId);
         
@@ -455,6 +515,7 @@ public class QuickReadApplication extends Application implements
             item.getItemProperty("title").setValue(node.getKey());
             item.getItemProperty("text").setValue(node.getValue());
             item.getItemProperty("icon").setValue(new ThemeResource("../runo/icons/16/folder.png"));
+            item.getItemProperty("node").setValue(node);
             dataContainer.setChildrenAllowed(itemId, node.numberOfChildren() > 0);
 
             // add parent

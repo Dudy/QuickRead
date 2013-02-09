@@ -24,6 +24,8 @@ import java.util.logging.Logger;
  */
 public class DocumentPersistence {
     
+    private static final Logger LOGGER = Logger.getLogger(DocumentPersistence.class.getName());
+    
     public static Project getFirstProject() {
         //TODO: this is kind of clumsy ...
         ArrayList<Project> projectList = loadProjectList___new();
@@ -49,7 +51,7 @@ public class DocumentPersistence {
             Document document = loadDocumentFromString(((Text)datastoreDocument.getProperty("content")).getValue());
             return document;
         } catch (EntityNotFoundException ex) {
-            Logger.getLogger(DocumentPersistence.class.getName()).log(Level.INFO, "no Document with id {0} found, creating a new one", id);
+            LOGGER.log(Level.INFO, "no Document with id {0} found, creating a new one", id);
             
             // create new Document, store immediately and hope the id is still not used ;-)
             //TODO: read the current (= max) version data from metadata and use it here, use 1 for now
@@ -63,7 +65,30 @@ public class DocumentPersistence {
         return DocumentHandler.deserialize(content);
     }
     
-    public static Document storeDocument(Document document) {
+//    public static Document storeDocument(Document document) {
+//        DatastoreService datastore = DatastoreServiceFactory.getDatastoreService();
+//        Entity datastoreDocument;
+//        
+//        if (document.getId() != null) {
+//            Key key = KeyFactory.createKey("Document", document.getId());
+//            
+//            try {
+//                datastoreDocument = datastore.get(key);
+//            } catch (EntityNotFoundException ex) {
+//                datastoreDocument = new Entity(key);
+//            }
+//        } else {
+//            datastoreDocument = new Entity("Document");
+//            document.setId(datastoreDocument.getKey().getId());
+//        }
+//        
+//        datastoreDocument.setProperty("content", new Text(DocumentHandler.serialize(document)));
+//        datastore.put(datastoreDocument);
+//        
+//        return document;
+//    }
+    
+    public static <T extends Document> T storeDocument(T document) {
         DatastoreService datastore = DatastoreServiceFactory.getDatastoreService();
         Entity datastoreDocument;
         
@@ -82,6 +107,8 @@ public class DocumentPersistence {
         
         datastoreDocument.setProperty("content", new Text(DocumentHandler.serialize(document)));
         datastore.put(datastoreDocument);
+        
+        LOGGER.log(Level.INFO, ((Text)datastoreDocument.getProperty("content")).getValue());
         
         return document;
     }
