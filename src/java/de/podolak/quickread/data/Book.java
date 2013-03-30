@@ -1,5 +1,6 @@
 package de.podolak.quickread.data;
 
+import de.podolak.quickread.Utilities;
 import de.podolak.quickread.data.datastore.Document;
 import de.podolak.quickread.data.datastore.DocumentType;
 import java.util.List;
@@ -16,25 +17,33 @@ public class Book extends Document {
     
     public Book() {
         setDocumentType(DocumentType.BOOK);
-        setAuthor("no author");
-        setTitle("no title");
     }
     
-    public String getAuthor() {
-//        return getFirstValueByKey(KEY_BOOK_AUTHOR);
-        return getFirstData(KEY_BOOK_AUTHOR);
+    public final String getAuthor() {
+        String author = getFirstData(KEY_BOOK_AUTHOR);
+        
+        if (author == null) {
+            author = Utilities.getI18NText("data.newBook.author");
+        }
+        
+        return author;
     }
     
-    public void setAuthor(String author) {
+    public final void setAuthor(String author) {
         setData(KEY_BOOK_AUTHOR, author);
     }
     
-    public String getTitle() {
-//        return getFirstValueByKey(KEY_BOOK_TITLE);
-        return getFirstData(KEY_BOOK_TITLE);
+    public final String getTitle() {
+        String title = getFirstData(KEY_BOOK_TITLE);
+        
+        if (title == null) {
+            title = Utilities.getI18NText("data.newBook.title");
+        }
+        
+        return title;
     }
     
-    public void setTitle(String title) {
+    public final void setTitle(String title) {
         setData(KEY_BOOK_TITLE, title);
     }
     

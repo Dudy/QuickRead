@@ -1,5 +1,6 @@
 package de.podolak.quickread.data;
 
+import de.podolak.quickread.Utilities;
 import de.podolak.quickread.data.datastore.Document;
 import de.podolak.quickread.data.datastore.DocumentPersistence;
 import de.podolak.quickread.data.datastore.DocumentType;
@@ -17,7 +18,7 @@ public class Project extends Document {
     public static final String KEY_PROJECT_NAME = "name";
     public static final String KEY_DOCUMENT_ID  = "documentID";
     
-    private List<Integer> documentIdList;
+    private List<Long> documentIdList;
     private List<Document> documentList;
 
     public Project() {
@@ -25,22 +26,28 @@ public class Project extends Document {
     }
     
     public String getName() {
-        return getFirstValueByKey(KEY_PROJECT_NAME);
+        String name = getFirstData(KEY_PROJECT_NAME);
+        
+        if (name == null) {
+            name = Utilities.getI18NText("data.newProject.name");
+        }
+        
+        return name;
     }
     
     public void setName(String name) {
         setData(KEY_PROJECT_NAME, name);
     }
     
-    public List<Integer> getDocumentIdList() {
+    public List<Long> getDocumentIdList() {
         // lazily extract the list of document IDs from node structure
         // do not yet load documents, this is done in getDocumentList()
         if (documentIdList == null) {
-            documentIdList = new ArrayList<Integer>();
+            documentIdList = new ArrayList<Long>();
             List<String> documentIdStringList = getValueListByKey(KEY_DOCUMENT_ID);
             for (String documentIdString : documentIdStringList) {
                 try {
-                    documentIdList.add(Integer.parseInt(documentIdString));
+                    documentIdList.add(Long.parseLong(documentIdString));
                 } catch (NumberFormatException e) {
                     // There should not be a key "documentID" with a non integer
                     // content. If there is one, silenty omit it.
@@ -57,7 +64,7 @@ public class Project extends Document {
         // lazily fetch the list of documents from datastore
         if (documentList == null) {
             documentList = new ArrayList<Document>();
-            for (Integer documentId : getDocumentIdList()) {
+            for (Long documentId : getDocumentIdList()) {
                 documentList.add(DocumentPersistence.loadDocument(documentId));
             }
         }
@@ -67,10 +74,12 @@ public class Project extends Document {
 
     public void addDocument(Document document) {
         getDocumentList().add(document);
+        getDocumentIdList().add(document.getId());
     }
     
     public void removeDocument(Document document) {
         getDocumentList().remove(document);
+        getDocumentIdList().remove(document.getId());
     }
 
     @Override

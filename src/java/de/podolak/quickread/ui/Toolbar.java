@@ -62,7 +62,7 @@ public class Toolbar extends HorizontalLayout {
         projectManagement.addListener(new Button.ClickListener() {
             @Override
             public void buttonClick(ClickEvent event) {
-                application.projectManagement();
+                application.showProjectManagementWindow();
             }
         });
         

@@ -31,6 +31,7 @@ public class Document implements Serializable {
     }
 
     public Document() {
+        this(DocumentType.COMMON);
     }
 
     public Document(Node root) {
@@ -62,7 +63,7 @@ public class Document implements Serializable {
         init(document.getId(), document.getSerializationVersion(), document.getRoot(), document.getCreateDate(),
                 document.getLastModifyDate(), document.getDocumentType());
     }
-
+    
     public final void init(Long id, Integer serializationVersion, Node root, Date createDate, Date lastModifyDate,
             DocumentType documentType) {
         // setRoot must be the first as all data is stored therein
@@ -73,7 +74,7 @@ public class Document implements Serializable {
         setLastModifyDate(lastModifyDate);
         setDocumentType(documentType);
     }
-
+    
     public Node getRoot() {
         if (root == null) {
             root = new Node(ROOT_KEY_PREFIX);
@@ -267,7 +268,15 @@ public class Document implements Serializable {
      */
     @Override
     public String toString() {
-        return getRoot().getValue();
+        StringBuilder builder = new StringBuilder();
+        
+        for (String attr : attributeStringList) {
+            builder.append(getFirstData(attr));
+        }
+        
+        return builder.toString();
+        
+        //return getRoot().getValue();
     }
 
     @Override

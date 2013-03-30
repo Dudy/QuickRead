@@ -1,9 +1,8 @@
 package de.podolak.quickread.data;
 
+import de.podolak.quickread.Utilities;
 import de.podolak.quickread.data.datastore.Document;
 import de.podolak.quickread.data.datastore.DocumentType;
-import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.List;
 
 /**
@@ -20,7 +19,13 @@ public class Song extends Document {
     }
     
     public String getTitle() {
-        return getFirstValueByKey(KEY_SONG_TITLE);
+        String title = getFirstData(KEY_SONG_TITLE);
+        
+        if (title == null) {
+            title = Utilities.getI18NText("data.newSong.title");
+        }
+        
+        return title;
     }
     
     public void setTitle(String title) {
@@ -28,7 +33,13 @@ public class Song extends Document {
     }
 
     public String getArtist() {
-        return getFirstValueByKey(KEY_SONG_ARTIST);
+        String artist = getFirstData(KEY_SONG_ARTIST);
+        
+        if (artist == null) {
+            artist = Utilities.getI18NText("data.newSong.artist");
+        }
+        
+        return artist;
     }
     
     public void setArtist(String artist) {

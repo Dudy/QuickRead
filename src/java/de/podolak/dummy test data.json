@@ -1,0 +1,71 @@
+{
+    "Node": {
+        "ID": "-1458444106606650001",
+        "key": "root",
+        "value": "",
+        "children": [{
+            "Node": {
+                "ID": "-7382533224203054953",
+                "key": "id",
+                "value": "0",
+                "children": []
+            }
+        },{
+        "Node": {
+            "ID": "6880121506616281776",
+            "key": "serializationVersion",
+            "value": "3",
+            "children": []
+        }
+    },{
+    "Node": {
+        "ID": "-7380749107053619925",
+        "key": "createDate",
+        "value": "1364629284967",
+        "children": []
+    }
+},{
+    "Node": {
+        "ID": "3275461673487887245",
+        "key": "lastModifyDate",
+        "value": "1364629284967",
+        "children": []
+    }
+},{
+    "Node": {
+        "ID": "6694582590273619957",
+        "key": "documentType",
+        "value": "BOOK",
+        "children": []
+    }
+},{
+    "Node": {
+        "ID": "6268629884210905315",
+        "key": "data",
+        "value": "",
+        "children": [{
+            "Node": {
+                "ID": "4519410247598901049",
+                "key": "title",
+                "value": "Yeah",
+                "children": []
+            }
+        },{
+        "Node": {
+            "ID": "-2752335608270761360",
+            "key": "author",
+            "value": "Alle",
+            "children": []
+        }
+    },{
+    "Node": {
+        "ID": "1565932109234286898",
+        "key": "kein Titel",
+        "value": "keine Beschreibung",
+        "children": []
+    }
+}]
+}
+}]
+}
+}

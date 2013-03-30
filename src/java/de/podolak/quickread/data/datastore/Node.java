@@ -2,9 +2,9 @@ package de.podolak.quickread.data.datastore;
 
 import java.io.Serializable;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Date;
 import java.util.List;
+import java.util.Random;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -13,12 +13,14 @@ import java.util.logging.Logger;
  * @author Dude
  */
 public class Node implements Serializable {
-    
+
     private static final long serialVersionUID = 1L;
 
     private String key;
     private String value;
     private List<Node> children;
+    
+    private final Long ID;
 
     public Node() {
         this("", "", null);
@@ -33,6 +35,8 @@ public class Node implements Serializable {
     }
     
     public Node(String key, String value, List<Node> children) {
+        ID = new Random().nextLong();
+        
         this.key = key;
         this.value = value;
         this.children = children;
@@ -96,26 +100,6 @@ public class Node implements Serializable {
     public int numberOfChildren() {
         return this.children.size();
     }
-    
-//    public List<String> getValueListByKey(String key) {
-//        if (key == null || key.isEmpty()) {
-//            return null;
-//        }
-//        
-//        ArrayList<String> valueList = new ArrayList<String>();
-//        
-//        if (key.equals(this.key)) {
-//            valueList.add(value);
-//        }
-//        
-//        if (children.size() > 0) {
-//            for (Node child : children) {
-//                valueList.addAll(child.getValueListByKey(key));
-//            }
-//        }
-//        
-//        return valueList;
-//    }
     
     /**
      * Returns the first value of the given key or null if no such key exists.
@@ -184,29 +168,7 @@ public class Node implements Serializable {
         
         return valueList;
     }
-    
-//    public List<String> getValueListByKeyPath(String keyPath) {
-//        if (keyPath == null || keyPath.isEmpty()) {
-//            return null;
-//        }
-//        
-//        ArrayList<String> valueList = new ArrayList<String>();
-//        String[] parts = keyPath.split("\\.", 2);
-//        
-//        if (parts[0].equals(key)) {
-//            if (parts.length == 1) {
-//                valueList.add(value);
-//            } else {
-//                if (children.size() > 0) {
-//                    for (Node child : children) {
-//                        valueList.addAll(child.getValueListByKeyPath(parts[1]));
-//                    }
-//                }
-//            }
-//        }
-//        
-//        return valueList;
-//    }
+
     /**
      * Returns the list of values that are stored for the given key path.
      * The name of this Node itself is not part of the key path. the key
@@ -413,8 +375,13 @@ public class Node implements Serializable {
 
     @Override
     public String toString() {
+        return toJson();
+    }
+    
+    public String toKeyValue() {
         return
-                "node=[" +
+                "[" +
+                "ID=" + ID + "," +
                 "key=" + key + "," +
                 "value=" + value + "," +
                 children +
@@ -436,6 +403,7 @@ public class Node implements Serializable {
         
         return new StringBuilder()
                 .append("\"Node\": {")
+                .append("\"ID\": \"").append(ID).append("\",")
                 .append("\"key\": \"").append(key).append("\",")
                 .append("\"value\": \"").append(value).append("\",")
                 .append("\"children\": [").append(childJsonString).append("]")

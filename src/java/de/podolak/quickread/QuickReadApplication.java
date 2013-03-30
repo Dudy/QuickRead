@@ -35,8 +35,6 @@ import de.podolak.quickread.ui.SearchWindow;
 import de.podolak.quickread.ui.Toolbar;
 import de.podolak.quickread.ui.wizard.NewDocumentWindow;
 import java.util.Arrays;
-import java.util.Collection;
-import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 import java.util.logging.Level;
@@ -49,70 +47,66 @@ public class QuickReadApplication extends Application implements
         ValueChangeListener, ItemClickListener,
         Container.ItemSetChangeListener, Container.PropertySetChangeListener {
 
-    private static final int ROOT_INDEX = 0;
+    private static final Logger LOGGER = Logger.getLogger(QuickReadApplication.class.getName());
+    
+    private static final long ROOT_INDEX = 0;
     private Window window;
     private static HashMap<ApplicationContext, TransactionListener> requestListeners = new HashMap<ApplicationContext, TransactionListener>();
     private boolean isInitialized = false;
-    
     // ui
     private NavigationTree navigationTree;
     private Toolbar toolbar;
     private HorizontalSplitPanel horizontalSplit = new HorizontalSplitPanel();
-    
     // Lazyly created ui references
     private NodeView nodeView = null;
     private HelpWindow helpWindow = null;
     private NodeForm nodeForm = null;
     private SearchWindow searchWindow = null;
-
     private NewDocumentWindow newDocumentWindow = null;
-    
     private ProjectManagementWindow projectManagementWindow = null;
-    
     // data handling
     private HierarchicalContainer dataContainer;
+
     private Project project;
 
     // <editor-fold defaultstate="collapsed" desc=" application ">
     @Override
     public void init() {
-        initData(DocumentPersistence.getFirstProject());
-        
-		// Only add one listener per context as Vaadin calls every listener in
-		// the context for every request.
-		if (getContext() != null && requestListeners.get(getContext()) == null) {
-			TransactionListener listener = new TransactionListener() {
+        createDataContainer(DocumentPersistence.getFirstProject());
 
-				@Override
-				public void transactionStart(Application app, Object req) {
-					if (!isInitialized) {
-						buildUI();
-						isInitialized = true;
-					}
+        // Only add one listener per context as Vaadin calls every listener in
+        // the context for every request.
+        if (getContext() != null && requestListeners.get(getContext()) == null) {
+            TransactionListener listener = new TransactionListener() {
+                @Override
+                public void transactionStart(Application app, Object req) {
+                    if (!isInitialized) {
+                        buildUI();
+                        isInitialized = true;
+                    }
 
                     toolbar.update((HttpServletRequest) req);
-				}
+                }
 
-				@Override
-				public void transactionEnd(Application app, Object req) {
-					// NOP
-				}
-			};
+                @Override
+                public void transactionEnd(Application app, Object req) {
+                    // NOP
+                }
+            };
 
-			getContext().addTransactionListener(listener);
+            getContext().addTransactionListener(listener);
 
-			requestListeners.put(getContext(), listener);
-		}
-	}
+            requestListeners.put(getContext(), listener);
+        }
+    }
     // </editor-fold>
 
     // <editor-fold defaultstate="collapsed" desc=" UI ">
-    
     private void buildUI() {
         buildMainLayout();
         setMainComponent(getNodeView());
     }
-    
+
     private void buildMainLayout() {
         window = new Window(Utilities.getI18NText("window.title"));
 
@@ -135,37 +129,39 @@ public class QuickReadApplication extends Application implements
     private void setMainComponent(Component c) {
         horizontalSplit.setSecondComponent(c);
     }
-    
-    public void projectManagement() {
-        getMainWindow().addWindow(getProjectManagementWindow());
-        getProjectManagementWindow().setSelectedProject(project);
+
+    public void showProjectManagementWindow() {
+        showMessage("not yet implemented", "the project management has not yet been implemented");
+        
+        //getMainWindow().addWindow(getProjectManagementWindow());
+        //getProjectManagementWindow().setSelectedProject(project);
     }
-    
+
     public void cancelProjectManagement() {
         getMainWindow().removeWindow(projectManagementWindow);
     }
-    
+
     public void closeProjectManagement(Project selectedProject) {
         getMainWindow().removeWindow(projectManagementWindow);
-        initData(selectedProject);
+        initDataContainer(selectedProject);
         navigationTree.setContainerDataSource(getDataContainer());
     }
-    
+
     public void closeNewDocumentWindow(Document newDocument) {
         getMainWindow().removeWindow(newDocumentWindow);
-        
+
         if (newDocument != null) {
             project.addDocument(newDocument);
-            initData(project);
-            navigationTree.setContainerDataSource(getDataContainer());
+            save();
         }
+        
+        newDocumentWindow = null;
     }
-    
+
     private ProjectManagementWindow getProjectManagementWindow() {
         if (projectManagementWindow == null) {
             projectManagementWindow = new ProjectManagementWindow(this);
             projectManagementWindow.center();
-            
         }
         return projectManagementWindow;
     }
@@ -173,6 +169,8 @@ public class QuickReadApplication extends Application implements
     private HelpWindow getHelpWindow() {
         if (helpWindow == null) {
             helpWindow = new HelpWindow();
+            helpWindow.setWidth("600px");
+            helpWindow.center();
         }
         return helpWindow;
     }
@@ -184,22 +182,18 @@ public class QuickReadApplication extends Application implements
         }
         return nodeView;
     }
-    
+
     private SearchWindow getSearchWindow() {
         if (searchWindow == null) {
             searchWindow = new SearchWindow(this);
         }
         return searchWindow;
     }
-    
+
     private NewDocumentWindow getNewDocumentWindow() {
         if (newDocumentWindow == null) {
             newDocumentWindow = new NewDocumentWindow(this);
             newDocumentWindow.center();
-            
-//            if (dataContainer != null) {
-//                dataContainer.addListener(newDocumentWindow);
-//            }
         }
         return newDocumentWindow;
     }
@@ -207,19 +201,21 @@ public class QuickReadApplication extends Application implements
     public void showHelpWindow() {
         getMainWindow().addWindow(getHelpWindow());
     }
-    
+
     public void showSearchWindow() {
-        getMainWindow().addWindow(getSearchWindow());
+        showMessage("not yet implemented", "the search has not yet been implemented");
+        
+        //getMainWindow().addWindow(getSearchWindow());
     }
-    
+
     public void showNewDocumentWindow() {
         getMainWindow().addWindow(getNewDocumentWindow());
     }
-    
+
     public void showMessage(String caption, String description) {
         window.showNotification(caption, description);
     }
-    
+
     public void showMessage(String caption, String description, int type) {
         window.showNotification(caption, description, type);
     }
@@ -250,96 +246,67 @@ public class QuickReadApplication extends Application implements
 
     @Override
     public void containerItemSetChange(ItemSetChangeEvent event) {
-        System.out.println("2: " + event);
-        System.out.println(dataContainer.size());
     }
 
     @Override
     public void containerPropertySetChange(PropertySetChangeEvent event) {
-        System.out.println("4: " + event);
     }
     // </editor-fold>
-
     // </editor-fold>
     
     // <editor-fold defaultstate="collapsed" desc=" data ">
     @Deprecated
     public void resetData() {
-//        initData(DocumentPersistence.loadDocument(2L));
-//        navigationTree.setContainerDataSource(getDataContainer());
-//        navigationTree.requestRepaint();
+        createDataContainer(DocumentPersistence.getFirstProject());
+        navigationTree.setContainerDataSource(getDataContainer());
+        navigationTree.requestRepaint();
     }
-    
-    private void initData(Project project) {
+
+    private void createDataContainer(Project project) {
         dataContainer = new HierarchicalContainer();
-        createDataContainer(project);
+        dataContainer.addContainerProperty("title", String.class, Utilities.getI18NText("data.newNode.title"));
+        dataContainer.addContainerProperty("text", String.class, Utilities.getI18NText("data.newNode.text"));
+        dataContainer.addContainerProperty("icon", ThemeResource.class, new ThemeResource("../runo/icons/16/document.png"));
+        dataContainer.addContainerProperty("node", Object.class, null);
+        dataContainer.addContainerProperty("documenttype", DocumentType.class, null);
+        initDataContainer(project);
     }
-    
+
     public void save() {
-//        Document newDocument = DocumentPersistence.storeDocument(new Document(
-//                project.getId(),
-//                DocumentPersistence.getDefaultVersion(),
-//                getNode(ROOT_INDEX),
-//                project.getCreateDate(),
-//                new Date(),
-//                project.getDocumentType()));
-//
-//        if (newDocument == null) {
-//            showMessage(
-//                    Utilities.getI18NText("action.save.error.caption"),
-//                    Utilities.getI18NText("action.save.error.description"),
-//                    Notification.TYPE_WARNING_MESSAGE);
-//        } else {
-//            showMessage(
-//                    Utilities.getI18NText("action.save.success.caption"),
-//                    Utilities.getI18NText("action.save.success.description"));
-//            createDataContainer(newDocument);
-//            navigationTree.requestRepaint();
-//        }
-        
+        Project newProject = DocumentPersistence.storeDocument(project);
 
-//        // always set root node first !!!
-//        Project newProject = new Project();
-//        newProject.setRoot(getNode(ROOT_INDEX));
-//        newProject.setDocumentType(project.getDocumentType());
-//        newProject.setId(project.getId());
-//        newProject.setSerializationVersion(DocumentPersistence.getDefaultVersion());
-//        newProject.setCreateDate(project.getCreateDate());
-//        newProject.setLastModifyDate(new Date());
-//        
-//        project = DocumentPersistence.storeDocument(newProject);
-//
-//        if (project == null) {
-//            showMessage(
-//                    Utilities.getI18NText("action.save.error.caption"),
-//                    Utilities.getI18NText("action.save.error.description"),
-//                    Notification.TYPE_WARNING_MESSAGE);
-//        } else {
-//            showMessage(
-//                    Utilities.getI18NText("action.save.success.caption"),
-//                    Utilities.getI18NText("action.save.success.description"));
-//            createDataContainer(project);
-//            navigationTree.setContainerDataSource(getDataContainer());
-//        }
-        
-        
-        
-        project = DocumentPersistence.storeDocument(project);
-
-        if (project == null) {
+        if (newProject == null) {
             showMessage(
                     Utilities.getI18NText("action.save.error.caption"),
                     Utilities.getI18NText("action.save.error.description"),
                     Notification.TYPE_WARNING_MESSAGE);
         } else {
+            Object selectedItemIdObject = navigationTree.getValue();
+            
+            java.util.ArrayList<Document> newDocumentList = new java.util.ArrayList<Document>();
+            // iterate over the OLD project !!
+            for (Document document : project.getDocumentList()) {
+                LOGGER.log(Level.FINE, document.toJson());
+                newDocumentList.add(DocumentPersistence.storeDocument(document));
+            }
+            newProject.getDocumentList().clear();
+            newProject.getDocumentList().addAll(newDocumentList);
+            
             showMessage(
                     Utilities.getI18NText("action.save.success.caption"),
                     Utilities.getI18NText("action.save.success.description"));
-            createDataContainer(project);
+            
+            createDataContainer(newProject);
+            navigationTree.setContainerDataSource(getDataContainer());
             navigationTree.requestRepaint();
+            
+            if (selectedItemIdObject != null) {
+                navigationTree.setValue(selectedItemIdObject);
+                nodeForm.setItemDataSource(dataContainer.getItem(selectedItemIdObject));
+            }
         }
     }
-
+    
     // <editor-fold defaultstate="collapsed" desc=" data container handling ">
     public Container getDataContainer() {
         return dataContainer;
@@ -353,52 +320,54 @@ public class QuickReadApplication extends Application implements
                     Window.Notification.TYPE_WARNING_MESSAGE);
             return;
         }
-        
+
         Object selectedItemIdObject = navigationTree.getValue();
 
         if (selectedItemIdObject != null) {
-            if (selectedItemIdObject instanceof Integer) {
-                Integer selectedItemId = (Integer) selectedItemIdObject;
+            if (selectedItemIdObject instanceof Long) {
+                Long selectedItemId = (Long) selectedItemIdObject;
                 Item selectedItem = dataContainer.getItem(selectedItemId);
                 DocumentType selectedDocumentType = (DocumentType) selectedItem.getItemProperty("documenttype").getValue();
                 Object lastItemIdObject = dataContainer.lastItemId();
-
-                if (lastItemIdObject instanceof Integer) {
-                    Integer lastItemId = (Integer) dataContainer.lastItemId();
+                
+                if (lastItemIdObject instanceof Long) {
                     Node node = null;
-                    
+
                     switch (selectedDocumentType) {
                         case PROJECT:
                             showNewDocumentWindow();
+                            // the closeNewDocument() method handles adding a new document
                             break;
-                        
-                        // for now all the other ones just get new nodes
                         case BOOK:
                         case SONG:
-                        case COMMON:
-                        default:
                             node = new Node(Utilities.getI18NText("data.newNode.title"), Utilities.getI18NText("data.newNode.text"));
-                            ((Node)selectedItem.getItemProperty("node").getValue()).addChild(node);
+                            ((Document) selectedItem.getItemProperty("node").getValue()).getDataNode().addChild(node);
+                            LOGGER.log(Level.FINE, "New Node:\n{0}", node.toJson());
+                            break;
+                        case COMMON:
+                            node = new Node(Utilities.getI18NText("data.newNode.title"), Utilities.getI18NText("data.newNode.text"));
+                            ((Node) selectedItem.getItemProperty("node").getValue()).addChild(node);
+                            LOGGER.log(Level.FINE, "New Node:\n{0}", node.toJson());
+                            break;
+                        default:
+                            LOGGER.log(Level.SEVERE, "unknown selected document type {0}", selectedDocumentType);
                             break;
                     }
                     
                     if (node != null) {
-                        addItem(node, lastItemId + 1, selectedItemId, true);
                         save();
                     }
                 } else {
-                    Logger.getLogger(QuickReadApplication.class.getName()).log(Level.SEVERE, "last item id in dataContainer is not of type Integer");
+                    LOGGER.log(Level.SEVERE, "last item id in dataContainer is not of type Long");
                 }
             } else {
-                Logger.getLogger(QuickReadApplication.class.getName()).log(Level.SEVERE, "selected item id is not of type Integer");
+                LOGGER.log(Level.SEVERE, "selected item id is not of type Long");
             }
         } else {
-            Logger.getLogger(QuickReadApplication.class.getName()).log(Level.SEVERE, "selected item id is null");
+            LOGGER.log(Level.SEVERE, "selected item id is null");
         }
-        
-        navigationTree.requestRepaint();
     }
-
+    
     public void removeNode() {
         if (!UserServiceFactory.getUserService().isUserLoggedIn()) {
             showMessage(
@@ -407,10 +376,10 @@ public class QuickReadApplication extends Application implements
                     Window.Notification.TYPE_WARNING_MESSAGE);
             return;
         }
-        
+
         final Object selectedItemIdObject = navigationTree.getValue();
 
-        if (selectedItemIdObject != null) {
+        if (selectedItemIdObject != null && ((Long)selectedItemIdObject) != ROOT_INDEX) {
             ConfirmDialog.show(
                     getMainWindow(),
                     Utilities.getI18NText("action.removeNode.confirmDialog.caption"),
@@ -420,94 +389,143 @@ public class QuickReadApplication extends Application implements
                     new ConfirmDialog.Listener() {
                         @Override
                         public void onClose(ConfirmDialog dialog) {
+                            // this just removes the node from the underlying data structure, the
+                            // data container handling (and therefore the navigation tree's composition)
+                            // is done by the save() method
+                            
                             if (dialog.isConfirmed()) {
                                 Object parentItemIdObject = dataContainer.getParent(selectedItemIdObject);
                                 Item selectedItem = dataContainer.getItem(selectedItemIdObject);
-                                Node selectedNode = (Node)selectedItem.getItemProperty("node").getValue();
+                                Object selectedObject = selectedItem.getItemProperty("node").getValue();
                                 Item parentItem = dataContainer.getItem(parentItemIdObject);
-                                Node parentNode = (Node)parentItem.getItemProperty("node").getValue();
-                                parentNode.removeChild(selectedNode);
+                                Node parentNode = null;
+                                DocumentType parentDocumentType = (DocumentType) parentItem.getItemProperty("documenttype").getValue();
+                                Object newIndex;
                                 
+                                switch (parentDocumentType) {
+                                    case PROJECT:
+                                        // remove document from project
+                                        project.removeDocument((Document)selectedObject);
+                                        
+                                        // no node has to be removed as we already removed the whole document
+                                        parentNode = null;
+                                        break;
+                                    case BOOK:
+                                    case SONG:
+                                        // adjust parent node such that the node to be deleted will be removed
+                                        // from the parent document's data
+                                        parentNode = ((Document)parentItem.getItemProperty("node").getValue()).getDataNode();
+                                        break;
+                                    case COMMON:
+                                        parentNode = (Node) parentItem.getItemProperty("node").getValue();
+                                        break;
+                                    default:
+                                        throw new AssertionError();
+                                }
+
+                                // calculate new index for the navigation tree
                                 //TODO: is there a better way to get the children in order?
                                 List<Object> children = Arrays.asList(dataContainer.getChildren(parentItemIdObject).toArray());
-
                                 if (children.size() == 1) {
-                                    dataContainer.setChildrenAllowed(parentItemIdObject, false);
-                                    navigationTree.setValue(parentItemIdObject);
-                                    nodeForm.setItemDataSource(dataContainer.getItem(parentItemIdObject));
-                                    dataContainer.removeItemRecursively(selectedItemIdObject);
+                                    newIndex = parentItemIdObject;
                                 } else {
                                     int index = children.indexOf(selectedItemIdObject);
-
                                     if (index > 0) {
                                         index--;
                                     }
-
-                                    navigationTree.setValue(children.get(index));
-                                    nodeForm.setItemDataSource(dataContainer.getItem(children.get(index)));
-                                    dataContainer.removeItem(selectedItemIdObject);
+                                    newIndex = children.get(index);
                                 }
 
+                                // remove node and save data structure
+                                if (parentNode != null) {
+                                    parentNode.removeChild((Node)selectedObject);
+                                }
                                 save();
+                                
+                                // reset navigation tree index
+                                if (newIndex != null) {
+                                    navigationTree.setValue(newIndex);
+                                    nodeForm.setItemDataSource(dataContainer.getItem(newIndex));
+                                }
                             }
                         }
                     });
         } else {
-            Logger.getLogger(QuickReadApplication.class.getName()).log(Level.SEVERE, "selected item id is null");
+            LOGGER.log(Level.SEVERE, "selected item id is null");
         }
     }
 
-    private void createDataContainer(Project project) {
+    private void initDataContainer(Project project) {
         this.project = project;
-
-        // create new container
-        dataContainer.removeAllItems();
-        dataContainer.addContainerProperty("title", String.class, Utilities.getI18NText("data.newNode.title"));
-        dataContainer.addContainerProperty("text", String.class, Utilities.getI18NText("data.newNode.text"));
-        dataContainer.addContainerProperty("icon", ThemeResource.class, new ThemeResource("../runo/icons/16/document.png"));
-        dataContainer.addContainerProperty("documenttype", DocumentType.class, null);
-        dataContainer.addContainerProperty("node", Node.class, null);
+        this.dataContainer.removeAllItems();
 
         // add project as root node
-        int projectId = addProject(project, ROOT_INDEX);
-        int newId = projectId + 1;
-        
-        if (project.getDocumentIdList().size() > 0) {
-            for (Document document : project.getDocumentList()) {
-                newId = addDocument(document, newId, projectId);
-            }
-        }
+        addProject(project);
     }
-    
-    private int addProject(Project project, int itemId) {
-        Item item = dataContainer.addItem(itemId);
+
+    /**
+     * Adds the project as root node.
+     * 
+     * @param project 
+     */
+    private void addProject(Project project) {
+        Item item = dataContainer.addItem(ROOT_INDEX);
         item.getItemProperty("title").setValue(project.getCaption());
         item.getItemProperty("text").setValue("");
         item.getItemProperty("icon").setValue(new ThemeResource("../runo/icons/16/folder.png"));
         item.getItemProperty("documenttype").setValue(DocumentType.PROJECT);
         item.getItemProperty("node").setValue(project);
-        dataContainer.setChildrenAllowed(itemId, project.getDocumentIdList().size() > 0);
-        return itemId;
+        dataContainer.setChildrenAllowed(ROOT_INDEX, project.getDocumentIdList().size() > 0);
+        
+        // add documents to root node
+        long newId = ROOT_INDEX + 1;
+        if (project.getDocumentIdList().size() > 0) {
+            for (Document document : project.getDocumentList()) {
+                newId = addDocument(document, newId);
+            }
+        }
     }
-    
-    private int addDocument(Document document, int itemId, int parentId) {
+
+    /**
+     * Returns the ID of the added document.
+     * 
+     * @param document
+     * @param itemId
+     * @param parentId
+     * @return 
+     */
+    private long addDocument(Document document, long itemId) {
         Item item = dataContainer.addItem(itemId);
         item.getItemProperty("title").setValue(document.getCaption());
         item.getItemProperty("text").setValue("");
         item.getItemProperty("icon").setValue(new ThemeResource("../runo/icons/16/folder.png"));
-        item.getItemProperty("documenttype").setValue(DocumentType.COMMON);
+        item.getItemProperty("documenttype").setValue(document.getDocumentType());
         item.getItemProperty("node").setValue(document);
         dataContainer.setChildrenAllowed(itemId, document.getDataNode().numberOfChildren() > 0);
-        dataContainer.setParent(itemId, parentId);
-        
+        dataContainer.setParent(itemId, ROOT_INDEX);
+
+        // add data node
         itemId = addItem(document.getDataNode(), itemId + 1, itemId, false);
         
         return itemId;
     }
-    
-    private int addItem(Node node, int itemId, int parentId, boolean rootVisible) {
-        int newId = itemId;
-        
+
+    /**
+     * Returns the next valid ID. Beware! This returns the next valid ID, in contrast to
+     * addDocument, which returned the ID of the item just added.
+     * 
+     * @param node
+     * @param itemId
+     * @param parentId
+     * @param rootVisible
+     * @return 
+     */
+    private long addItem(Node node, long itemId, long parentId, boolean rootVisible) {
+        LOGGER.log(Level.FINE, "adding item {0} as child to item {1} with {2} root, node is {3}",
+                new String[] {Long.toString(itemId), Long.toString(parentId),
+                    rootVisible ? "visible" : "invisible", node.toJson()});
+        long newId = itemId;
+
         if (rootVisible) {
             // add new item
             Item item;
@@ -516,6 +534,7 @@ public class QuickReadApplication extends Application implements
             item.getItemProperty("text").setValue(node.getValue());
             item.getItemProperty("icon").setValue(new ThemeResource("../runo/icons/16/folder.png"));
             item.getItemProperty("node").setValue(node);
+            item.getItemProperty("documenttype").setValue(DocumentType.COMMON);
             dataContainer.setChildrenAllowed(itemId, node.numberOfChildren() > 0);
 
             // add parent
@@ -523,12 +542,12 @@ public class QuickReadApplication extends Application implements
                 dataContainer.setChildrenAllowed(parentId, true);
                 dataContainer.setParent(itemId, parentId);
             }
-            
+
             newId++;
         } else {
             itemId = parentId;
         }
-        
+
         // add children
         for (Node child : node.getChildren()) {
             newId = addItem(child, newId, itemId, true);
@@ -537,24 +556,6 @@ public class QuickReadApplication extends Application implements
         // return last valid id
         return newId;
     }
-
-    private Node getNode(int itemId) {
-        Item item = dataContainer.getItem(itemId);
-        Node node = new Node(
-                item.getItemProperty("title").getValue().toString(),
-                item.getItemProperty("text").getValue().toString());
-
-        Collection<?> children = dataContainer.getChildren(itemId);
-        if (children != null && children.size() > 0) {
-            for (Object childIdObject : children) {
-                node.addChild(getNode((Integer) childIdObject));
-            }
-        }
-
-        return node;
-    }
     // </editor-fold>
-
     // </editor-fold>
-
 }

@@ -43,7 +43,7 @@ public class NewDocumentWindow extends Window implements Property.ValueChangeLis
         
         showDocumentForm();
     }
-
+    
     @Override
     public void valueChange(ValueChangeEvent event) {
         if (documentTypeCombobox.getValue() instanceof DocumentType) {

@@ -16,6 +16,7 @@ import com.vaadin.ui.VerticalLayout;
 import com.vaadin.ui.Window;
 import de.podolak.quickread.QuickReadApplication;
 import de.podolak.quickread.Utilities;
+import de.podolak.quickread.data.datastore.Node;
 
 @SuppressWarnings("serial")
 public class NodeForm extends Form implements ClickListener {
@@ -85,6 +86,11 @@ public class NodeForm extends Form implements ClickListener {
             
             commit();
             setReadOnly(true);
+            
+            Item itemDataSource = getItemDataSource();
+            Node node = (Node) itemDataSource.getItemProperty("node").getValue();
+            node.setKey(itemDataSource.getItemProperty("title").getValue().toString());
+            node.setValue(itemDataSource.getItemProperty("text").getValue().toString());
             
             app.save();
         } else if (source == cancel) {

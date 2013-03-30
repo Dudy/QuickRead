@@ -17,12 +17,16 @@ public class HelpWindow extends Window {
             "- Abbruch der Editieraktion<br>" +
             "- Hinzufügen eines Knotens<br>" +
             "- Entfernen eines Knotens (mit Rückfrage)<br>" +
+            "- Speichern<br>" +
+            "- Laden<br>" +
+            "- Anmelden als Benutzer<br>" +
+            "- einfache Autorisierung (z.B. Editieren nur als angemeldeter Benutzer, noch keine benutzerspezifischen Rechte)<br>" +
             "- Hilfefenster ;-)<br>" +
             "<br>" +
             "Was kommt als nächstes:<br>" +
-            "- Speichern<br>" +
-            "- Laden<br>" +
-            "<br>" +
+            "- Suche<br>" +
+            "- Projektverwaltung<br>" +
+            "- Tastatursteuerung<br>" +
             "<br>" +
             "<br>" +
             "<br>" +

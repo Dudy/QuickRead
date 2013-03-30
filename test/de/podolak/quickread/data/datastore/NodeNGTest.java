@@ -3,6 +3,7 @@ package de.podolak.quickread.data.datastore;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+import org.junit.Ignore;
 import static org.testng.Assert.*;
 import org.testng.annotations.AfterClass;
 import org.testng.annotations.AfterMethod;
@@ -348,7 +349,8 @@ public class NodeNGTest {
         assertNull(result);
         
         // key denotes node itself
-        result = intermediate2.getFirstValueByKeyPath(KEY_INTERMEDIATE_2);
+        //result = intermediate2.getFirstValueByKeyPath(KEY_INTERMEDIATE_2);
+        result = intermediate2.getFirstValueByKeyPath(KEY_THIS);
         assertNotNull(result);
         assertEquals(result, VALUE_INTERMEDIATE_2);
         
@@ -358,10 +360,10 @@ public class NodeNGTest {
         assertEquals(result, VALUE_INTERMEDIATE_2);
         
         // correct hierarchical access of data
-        result = root.getFirstValueByKeyPath(KEY_SURNAME);
+        result = root.getFirstValueByKeyPath(KEY_DATA + "." + KEY_INTERMEDIATE_2 + "." + KEY_SURNAME);
         assertNotNull(result);
         assertEquals(result, VALUE_SURNAME);
-        result = root.getFirstValueByKeyPath(KEY_PRENAME);
+        result = root.getFirstValueByKeyPath(KEY_DATA + "." + KEY_INTERMEDIATE_2 + "." + KEY_PRENAME);
         assertNotNull(result);
         assertEquals(result, VALUE_PRENAME_1);
     }
@@ -797,7 +799,7 @@ public class NodeNGTest {
     /**
      * Test of toJson method, of class Node.
      */
-    @Test
+    @Test(enabled = false)
     public void testToJson() {
         System.out.println("toJson");
         Node instance = new Node();
@@ -811,7 +813,7 @@ public class NodeNGTest {
     /**
      * Test of toString method, of class Node.
      */
-    @Test
+    @Test(enabled = false)
     public void testToString() {
         System.out.println("toString");
         Node instance = new Node();

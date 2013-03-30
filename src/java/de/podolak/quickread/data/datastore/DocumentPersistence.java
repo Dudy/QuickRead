@@ -49,6 +49,7 @@ public class DocumentPersistence {
         try {
             Entity datastoreDocument = DatastoreServiceFactory.getDatastoreService().get(key);
             Document document = loadDocumentFromString(((Text)datastoreDocument.getProperty("content")).getValue());
+            document.setId(id);
             return document;
         } catch (EntityNotFoundException ex) {
             LOGGER.log(Level.INFO, "no Document with id {0} found, creating a new one", id);
@@ -56,8 +57,7 @@ public class DocumentPersistence {
             // create new Document, store immediately and hope the id is still not used ;-)
             //TODO: read the current (= max) version data from metadata and use it here, use 1 for now
             Document document = new Document(id, 1, new Node(Utilities.getI18NText("document.new")), new Date(), new Date(), DocumentType.COMMON);
-            storeDocument(document);
-            return document;
+            return storeDocument(document);
         }
     }
     
@@ -102,11 +102,15 @@ public class DocumentPersistence {
             }
         } else {
             datastoreDocument = new Entity("Document");
-            document.setId(datastoreDocument.getKey().getId());
+            
+            // TODO: which one?
+            //document.setId(datastore.put(datastoreDocument).getId());
+            //document.setId(datastoreDocument.getKey().getId());
         }
         
         datastoreDocument.setProperty("content", new Text(DocumentHandler.serialize(document)));
-        datastore.put(datastoreDocument);
+        //datastore.put(datastoreDocument);
+        document.setId(datastore.put(datastoreDocument).getId());
         
         LOGGER.log(Level.INFO, ((Text)datastoreDocument.getProperty("content")).getValue());
         
