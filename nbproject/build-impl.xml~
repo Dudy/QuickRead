@@ -1066,7 +1066,7 @@ exists or setup the property manually. For example like this:
         </condition>
     </target>
     <target if="do.display.browser.nb" name="-display-browser-nb">
-        <nbbrowse context="${browser.context}" url="${client.url}" urlPath="${client.urlPart}"/>
+        <nbbrowse url="${client.url}"/>
     </target>
     <target if="do.display.browser.cl" name="-get-browser" unless="browser">
         <condition property="browser" value="rundll32">
@@ -1152,7 +1152,7 @@ exists or setup the property manually. For example like this:
         </nbjpdaconnect>
     </target>
     <target if="do.display.browser.debug" name="debug-display-browser">
-        <nbbrowse context="${browser.context}" url="${client.url}" urlPath="${client.urlPart}"/>
+        <nbbrowse url="${client.url}"/>
     </target>
     <target if="do.debug.client" name="connect-client-debugger">
         <webproject1:nbjsdebugstart webUrl="${client.url}"/>
