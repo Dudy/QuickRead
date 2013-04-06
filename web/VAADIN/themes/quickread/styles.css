@@ -126,7 +126,7 @@
    white-space: pre;
 }
 
-.v-textarea.v-readonly.v-textarea-edit-text, .v-textfield.v-readonly.v-textfield-edit-title {
+.v-textarea.v-readonly.v-textarea-edit-text, .v-textfield.v-readonly.v-textfield-edit-key {
     border-right-style: solid;
     border-left-style: solid;
     border-bottom-style: solid;

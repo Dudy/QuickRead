@@ -268,15 +268,17 @@ public class Document implements Serializable {
      */
     @Override
     public String toString() {
-        StringBuilder builder = new StringBuilder();
+        return "Document " + getId();
         
-        for (String attr : attributeStringList) {
-            builder.append(getFirstData(attr));
-        }
+//        StringBuilder builder = new StringBuilder();
+//        
+//        for (String attr : attributeStringList) {
+//            builder.append(getFirstData(attr));
+//        }
+//        
+//        return builder.toString();
         
-        return builder.toString();
-        
-        //return getRoot().getValue();
+//        return getRoot().getValue();
     }
 
     @Override

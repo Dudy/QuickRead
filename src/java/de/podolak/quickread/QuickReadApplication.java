@@ -28,11 +28,12 @@ import de.podolak.quickread.data.datastore.DocumentType;
 import de.podolak.quickread.data.datastore.Node;
 import de.podolak.quickread.ui.HelpWindow;
 import de.podolak.quickread.ui.NavigationTree;
-import de.podolak.quickread.ui.NodeForm;
 import de.podolak.quickread.ui.NodeView;
+import de.podolak.quickread.ui.OldNodeView;
 import de.podolak.quickread.ui.ProjectManagementWindow;
 import de.podolak.quickread.ui.SearchWindow;
 import de.podolak.quickread.ui.Toolbar;
+import de.podolak.quickread.ui.OldNodeForm;
 import de.podolak.quickread.ui.wizard.NewDocumentWindow;
 import java.util.Arrays;
 import java.util.HashMap;
@@ -41,6 +42,9 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 import javax.servlet.http.HttpServletRequest;
 import org.vaadin.dialogs.ConfirmDialog;
+
+// TODO use ApplicationContext for synchronization between parts of the application
+//      (e.g. this Application class, Handlers, Factories, Windows aso.)
 
 @SuppressWarnings("serial")
 public class QuickReadApplication extends Application implements
@@ -51,16 +55,20 @@ public class QuickReadApplication extends Application implements
     
     private static final long ROOT_INDEX = 0;
     private Window window;
-    private static HashMap<ApplicationContext, TransactionListener> requestListeners = new HashMap<ApplicationContext, TransactionListener>();
+    private static final HashMap<ApplicationContext, TransactionListener> requestListeners = new HashMap<ApplicationContext, TransactionListener>();
     private boolean isInitialized = false;
     // ui
     private NavigationTree navigationTree;
     private Toolbar toolbar;
-    private HorizontalSplitPanel horizontalSplit = new HorizontalSplitPanel();
+    private final HorizontalSplitPanel horizontalSplit = new HorizontalSplitPanel();
     // Lazyly created ui references
-    private NodeView nodeView = null;
     private HelpWindow helpWindow = null;
-    private NodeForm nodeForm = null;
+    
+    //private NodeView nodeView = null;
+    //private EditForm nodeForm = null;
+    private OldNodeView nodeView = null;
+    private OldNodeForm nodeForm = null;
+    
     private SearchWindow searchWindow = null;
     private NewDocumentWindow newDocumentWindow = null;
     private ProjectManagementWindow projectManagementWindow = null;
@@ -175,10 +183,22 @@ public class QuickReadApplication extends Application implements
         return helpWindow;
     }
 
-    private NodeView getNodeView() {
+//    private NodeView getNodeView() {
+//        if (nodeView == null) {
+//            //nodeForm = new EditForm(this);
+//            //nodeView = new NodeView(nodeForm);
+//            nodeForm = new OldNodeForm(this);
+//            nodeView = new OldNodeView(nodeForm);
+//        }
+//        return nodeView;
+//    }
+    
+    private OldNodeView getNodeView() {
         if (nodeView == null) {
-            nodeForm = new NodeForm(this);
-            nodeView = new NodeView(nodeForm);
+            //nodeForm = new EditForm(this);
+            //nodeView = new NodeView(nodeForm);
+            nodeForm = new OldNodeForm(this);
+            nodeView = new OldNodeView(nodeForm);
         }
         return nodeView;
     }
@@ -255,19 +275,14 @@ public class QuickReadApplication extends Application implements
     // </editor-fold>
     
     // <editor-fold defaultstate="collapsed" desc=" data ">
-    @Deprecated
-    public void resetData() {
-        createDataContainer(DocumentPersistence.getFirstProject());
-        navigationTree.setContainerDataSource(getDataContainer());
-        navigationTree.requestRepaint();
-    }
-
     private void createDataContainer(Project project) {
         dataContainer = new HierarchicalContainer();
-        dataContainer.addContainerProperty("title", String.class, Utilities.getI18NText("data.newNode.title"));
+        dataContainer.addContainerProperty("title", String.class, Utilities.getI18NText("data.newNode.title")); // i18n
+        dataContainer.addContainerProperty("rawTitle", String.class, "data.newNode.title"); // raw string, no i18n
         dataContainer.addContainerProperty("text", String.class, Utilities.getI18NText("data.newNode.text"));
         dataContainer.addContainerProperty("icon", ThemeResource.class, new ThemeResource("../runo/icons/16/document.png"));
-        dataContainer.addContainerProperty("node", Object.class, null);
+        dataContainer.addContainerProperty("object", Object.class, null);
+        dataContainer.addContainerProperty("itemId", Object.class, null);
         dataContainer.addContainerProperty("documenttype", DocumentType.class, null);
         initDataContainer(project);
     }
@@ -341,12 +356,12 @@ public class QuickReadApplication extends Application implements
                         case BOOK:
                         case SONG:
                             node = new Node(Utilities.getI18NText("data.newNode.title"), Utilities.getI18NText("data.newNode.text"));
-                            ((Document) selectedItem.getItemProperty("node").getValue()).getDataNode().addChild(node);
+                            ((Document) selectedItem.getItemProperty("object").getValue()).getDataNode().addChild(node);
                             LOGGER.log(Level.FINE, "New Node:\n{0}", node.toJson());
                             break;
                         case COMMON:
                             node = new Node(Utilities.getI18NText("data.newNode.title"), Utilities.getI18NText("data.newNode.text"));
-                            ((Node) selectedItem.getItemProperty("node").getValue()).addChild(node);
+                            ((Node) selectedItem.getItemProperty("object").getValue()).addChild(node);
                             LOGGER.log(Level.FINE, "New Node:\n{0}", node.toJson());
                             break;
                         default:
@@ -376,10 +391,33 @@ public class QuickReadApplication extends Application implements
                     Window.Notification.TYPE_WARNING_MESSAGE);
             return;
         }
-
+        
         final Object selectedItemIdObject = navigationTree.getValue();
 
-        if (selectedItemIdObject != null && ((Long)selectedItemIdObject) != ROOT_INDEX) {
+        if (selectedItemIdObject instanceof Long && ((Long)selectedItemIdObject) != ROOT_INDEX) {
+            final Object parentItemIdObject = dataContainer.getParent(selectedItemIdObject);
+            final Item parentItem = dataContainer.getItem(parentItemIdObject);
+            final Item selectedItem = dataContainer.getItem(selectedItemIdObject);
+            final Object selectedObject = selectedItem.getItemProperty("object").getValue();
+
+            if (selectedObject instanceof Node) {
+                Node node = (Node) selectedObject;
+                String key = node.getKey();
+                Object parentObject = parentItem.getItemProperty("object").getValue();
+
+                if (parentObject instanceof Document) {
+                    for (String attribute : ((Document)parentObject).getAttributeStringList()) {
+                        if (attribute.equals(key)) {
+                            showMessage(
+                                    Utilities.getI18NText("error.general"),
+                                    Utilities.getI18NText("document.nodeNotDeletable"),
+                                    Window.Notification.TYPE_WARNING_MESSAGE);
+                            return;
+                        }
+                    }
+                }
+            }
+            
             ConfirmDialog.show(
                     getMainWindow(),
                     Utilities.getI18NText("action.removeNode.confirmDialog.caption"),
@@ -394,10 +432,6 @@ public class QuickReadApplication extends Application implements
                             // is done by the save() method
                             
                             if (dialog.isConfirmed()) {
-                                Object parentItemIdObject = dataContainer.getParent(selectedItemIdObject);
-                                Item selectedItem = dataContainer.getItem(selectedItemIdObject);
-                                Object selectedObject = selectedItem.getItemProperty("node").getValue();
-                                Item parentItem = dataContainer.getItem(parentItemIdObject);
                                 Node parentNode = null;
                                 DocumentType parentDocumentType = (DocumentType) parentItem.getItemProperty("documenttype").getValue();
                                 Object newIndex;
@@ -414,10 +448,10 @@ public class QuickReadApplication extends Application implements
                                     case SONG:
                                         // adjust parent node such that the node to be deleted will be removed
                                         // from the parent document's data
-                                        parentNode = ((Document)parentItem.getItemProperty("node").getValue()).getDataNode();
+                                        parentNode = ((Document)parentItem.getItemProperty("object").getValue()).getDataNode();
                                         break;
                                     case COMMON:
-                                        parentNode = (Node) parentItem.getItemProperty("node").getValue();
+                                        parentNode = (Node) parentItem.getItemProperty("object").getValue();
                                         break;
                                     default:
                                         throw new AssertionError();
@@ -471,10 +505,12 @@ public class QuickReadApplication extends Application implements
     private void addProject(Project project) {
         Item item = dataContainer.addItem(ROOT_INDEX);
         item.getItemProperty("title").setValue(project.getCaption());
+        item.getItemProperty("rawTitle").setValue(project.getCaption());
         item.getItemProperty("text").setValue("");
         item.getItemProperty("icon").setValue(new ThemeResource("../runo/icons/16/folder.png"));
         item.getItemProperty("documenttype").setValue(DocumentType.PROJECT);
-        item.getItemProperty("node").setValue(project);
+        item.getItemProperty("object").setValue(project);
+        item.getItemProperty("itemId").setValue(ROOT_INDEX);
         dataContainer.setChildrenAllowed(ROOT_INDEX, project.getDocumentIdList().size() > 0);
         
         // add documents to root node
@@ -497,10 +533,12 @@ public class QuickReadApplication extends Application implements
     private long addDocument(Document document, long itemId) {
         Item item = dataContainer.addItem(itemId);
         item.getItemProperty("title").setValue(document.getCaption());
+        item.getItemProperty("rawTitle").setValue(document.getCaption());
         item.getItemProperty("text").setValue("");
         item.getItemProperty("icon").setValue(new ThemeResource("../runo/icons/16/folder.png"));
         item.getItemProperty("documenttype").setValue(document.getDocumentType());
-        item.getItemProperty("node").setValue(document);
+        item.getItemProperty("object").setValue(document);
+        item.getItemProperty("itemId").setValue(itemId);
         dataContainer.setChildrenAllowed(itemId, document.getDataNode().numberOfChildren() > 0);
         dataContainer.setParent(itemId, ROOT_INDEX);
 
@@ -514,6 +552,7 @@ public class QuickReadApplication extends Application implements
      * Returns the next valid ID. Beware! This returns the next valid ID, in contrast to
      * addDocument, which returned the ID of the item just added.
      * 
+     * @param parentObject
      * @param node
      * @param itemId
      * @param parentId
@@ -530,13 +569,29 @@ public class QuickReadApplication extends Application implements
             // add new item
             Item item;
             item = dataContainer.addItem(itemId);
-            item.getItemProperty("title").setValue(node.getKey());
+            
+            String keyText = node.getKey();
+            Item parentItem = dataContainer.getItem(parentId);
+            Object parentObject = parentItem.getItemProperty("object").getValue();
+            DocumentType parentDocumentType = (DocumentType) parentItem.getItemProperty("documenttype").getValue();
+            if (parentObject instanceof Document) {
+                for (String attribute : ((Document) parentObject).getAttributeStringList()) {
+                    if (attribute.equals(node.getKey())) {
+                        keyText = Utilities.getI18NText(parentDocumentType.getPrefix() + keyText);
+                        break;
+                    }
+                }
+            }
+            
+            item.getItemProperty("title").setValue(keyText);
+            item.getItemProperty("rawTitle").setValue(node.getKey());
             item.getItemProperty("text").setValue(node.getValue());
             item.getItemProperty("icon").setValue(new ThemeResource("../runo/icons/16/folder.png"));
-            item.getItemProperty("node").setValue(node);
+            item.getItemProperty("object").setValue(node);
+            item.getItemProperty("itemId").setValue(itemId);
             item.getItemProperty("documenttype").setValue(DocumentType.COMMON);
             dataContainer.setChildrenAllowed(itemId, node.numberOfChildren() > 0);
-
+            
             // add parent
             if (parentId >= 0) {
                 dataContainer.setChildrenAllowed(parentId, true);

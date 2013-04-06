@@ -35,8 +35,6 @@ public class SearchWindow extends Window {
     }
     
     private void goAction() {
-        //resetDatastore();
-        app.resetData();
     }
     
     private void createTwoInitialProjects() {

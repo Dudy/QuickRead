@@ -1,12 +1,11 @@
 package de.podolak.quickread.ui;
 
-import de.podolak.quickread.ui.editform.EditForm;
 import com.vaadin.ui.VerticalSplitPanel;
 
 @SuppressWarnings("serial")
-public class NodeView extends VerticalSplitPanel {
+public class OldNodeView extends VerticalSplitPanel {
 
-    public NodeView(EditForm nodeForm) {
+    public OldNodeView(OldNodeForm nodeForm) {
         addStyleName("view");
         addComponent(nodeForm);
     }

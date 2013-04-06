@@ -31,6 +31,8 @@ public enum DocumentType {
                 throw new AssertionError();
         }
     }
+    
+    private String prefix;
 
     /**
      * Returns a new instance of a <code>Document</code> or a descendant of it
@@ -49,6 +51,13 @@ public enum DocumentType {
     
     public List<String> getStringAttributeList() {
         return getInstanceOf().getAttributeStringList();
+    }
+
+    /**
+     * @return the prefix
+     */
+    public String getPrefix() {
+        return name().toLowerCase() + ".";
     }
     
 }

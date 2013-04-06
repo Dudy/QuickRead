@@ -14,7 +14,7 @@ import java.util.logging.Logger;
  * @author Dude
  */
 public class Project extends Document {
-    
+
     public static final String KEY_PROJECT_NAME = "name";
     public static final String KEY_DOCUMENT_ID  = "documentID";
     
